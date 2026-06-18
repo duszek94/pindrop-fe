@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-pindrop-bg: #050810;
+  --color-pindrop-surface: #0f1419;
+  --color-pindrop-surface-elevated: #151b24;
+  --color-pindrop-border: #2a3441;
+  --color-pindrop-text: #f8fafc;
+  --color-pindrop-text-muted: #94a3b8;
+  --color-pindrop-primary: #34d399;
+  --color-pindrop-primary-hover: #2dd4a8;
+  --color-pindrop-ai: #6366f1;
+}

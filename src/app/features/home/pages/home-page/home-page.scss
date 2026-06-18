@@ -1,0 +1,45 @@
+@use '../../../../../styles/auth-tokens';
+
+.home-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at top, rgb(16 185 129 / 10%), transparent 35%), var(--pindrop-bg);
+}
+
+.home-page__card {
+  width: min(100%, 32rem);
+  padding: 2rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--pindrop-border);
+  background: var(--pindrop-surface);
+}
+
+.home-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.home-page__eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--pindrop-primary);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.home-page__card h1 {
+  margin: 0 0 0.75rem;
+  font-size: 2rem;
+}
+
+.home-page__card p {
+  margin: 0 0 1.5rem;
+  color: var(--pindrop-text-muted);
+}

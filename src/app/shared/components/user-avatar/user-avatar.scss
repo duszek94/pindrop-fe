@@ -1,0 +1,29 @@
+@use '../../../../styles/auth-tokens';
+
+.user-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 2px solid rgb(52 211 153 / 35%);
+  background: linear-gradient(135deg, rgb(52 211 153 / 22%), rgb(99 102 241 / 18%));
+  color: var(--pindrop-text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.user-avatar__image {
+  object-fit: cover;
+  padding: 0;
+  background: transparent;
+}
+
+.user-avatar--sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.6875rem;
+}

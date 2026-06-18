@@ -1,0 +1,13 @@
+@if (avatarUrl()) {
+  <img
+    class="user-avatar user-avatar__image"
+    [class.user-avatar--sm]="size() === 'sm'"
+    [src]="avatarUrl()!"
+    alt=""
+    aria-hidden="true"
+  />
+} @else {
+  <span class="user-avatar" [class.user-avatar--sm]="size() === 'sm'" aria-hidden="true">
+    {{ initials() }}
+  </span>
+}

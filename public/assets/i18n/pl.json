@@ -1,0 +1,140 @@
+{
+  "brand": {
+    "name": "Pindrop",
+    "tagline": "Twój asystent podróży z AI",
+    "description": "Planuj mądrzejsze wyjazdy, odkrywaj ukryte perełki i pozwól AI tworzyć spersonalizowane plany dopasowane do Twojego stylu podróżowania."
+  },
+  "auth": {
+    "login": {
+      "title": "Witaj ponownie",
+      "subtitle": "Zaloguj się, aby kontynuować planowanie przygód",
+      "google": "Kontynuuj z Google",
+      "divider": "LUB KONTYNUUJ E-MAILEM",
+      "email": "E-mail",
+      "emailPlaceholder": "ty@example.com",
+      "password": "Hasło",
+      "passwordPlaceholder": "Wpisz hasło",
+      "forgotPassword": "Zapomniałeś hasła?",
+      "submit": "Zaloguj się",
+      "footer": "Nie masz konta?",
+      "signUp": "Zarejestruj się"
+    },
+    "register": {
+      "title": "Utwórz konto",
+      "subtitle": "Dołącz do Pindrop i zacznij mądrzej planować podróże",
+      "firstName": "Imię",
+      "firstNamePlaceholder": "Jan",
+      "lastName": "Nazwisko",
+      "lastNamePlaceholder": "Kowalski",
+      "email": "E-mail",
+      "emailPlaceholder": "ty@example.com",
+      "password": "Hasło",
+      "passwordPlaceholder": "Minimum 8 znaków",
+      "confirmPassword": "Potwierdź hasło",
+      "confirmPasswordPlaceholder": "Powtórz hasło",
+      "submit": "Utwórz konto",
+      "footer": "Masz już konto?",
+      "signIn": "Zaloguj się"
+    },
+    "forgotPassword": {
+      "title": "Zapomniałeś hasła?",
+      "subtitle": "Podaj e-mail, a wyślemy link resetujący, jeśli konto istnieje.",
+      "email": "E-mail",
+      "emailPlaceholder": "ty@example.com",
+      "submit": "Wyślij link resetujący",
+      "footer": "Pamiętasz hasło?",
+      "backToSignIn": "Wróć do logowania"
+    },
+    "resetPassword": {
+      "title": "Resetuj hasło",
+      "subtitle": "Wybierz silne nowe hasło dla swojego konta",
+      "newPassword": "Nowe hasło",
+      "newPasswordPlaceholder": "Minimum 8 znaków",
+      "confirmPassword": "Potwierdź hasło",
+      "confirmPasswordPlaceholder": "Powtórz hasło",
+      "submit": "Zaktualizuj hasło",
+      "backToSignIn": "Wróć do logowania"
+    },
+    "oauth": {
+      "completing": "Kończenie logowania...",
+      "failed": "Logowanie przez Google nie powiodło się. Nie zwrócono tokenu."
+    }
+  },
+  "home": {
+    "eyebrow": "Pindrop",
+    "welcome": "Witaj{{name}}!",
+    "signedInAs": "Jesteś zalogowany jako {{email}}.",
+    "signOut": "Wyloguj się"
+  },
+  "dashboard": {
+    "loading": "Ładowanie pulpitu...",
+    "notifications": "Powiadomienia",
+    "profileMenu": "Otwórz menu profilu",
+    "nav": {
+      "label": "Nawigacja główna",
+      "home": "Start",
+      "explore": "Odkrywaj",
+      "trips": "Wycieczki",
+      "favorites": "Ulubione",
+      "profile": "Profil"
+    },
+    "hero": {
+      "badge": "Z AI",
+      "title": "Dokąd teraz?",
+      "subtitle": "Pozwól naszej AI stworzyć idealny plan podróży dopasowany do Twoich preferencji i stylu podróżowania.",
+      "cta": "Zaplanuj nową wycieczkę z AI",
+      "loadingSuggestions": "Szukam destynacji..."
+    },
+    "trips": {
+      "title": "Moje wycieczki",
+      "viewAll": "Zobacz wszystkie",
+      "create": "Utwórz nową wycieczkę",
+      "creating": "Tworzenie...",
+      "status": {
+        "upcoming": "Nadchodząca",
+        "planning": "Planowanie",
+        "active": "Aktywna",
+        "completed": "Zakończona",
+        "cancelled": "Anulowana"
+      }
+    },
+    "itineraries": {
+      "title": "Ulubione plany",
+      "exploreMore": "Odkryj więcej",
+      "by": "autor: {{author}}",
+      "view": "Zobacz"
+    },
+    "globe": {
+      "title": "Interaktywny globus już wkrótce",
+      "subtitle": "Odkrywaj swoje wycieczki wizualnie na interaktywnym globusie 3D. Zobacz wszystkie destynacje i planuj trasy z łatwością.",
+      "subtitleWithMarkers": "Masz {{count}} destynacji na mapie swoich wycieczek. Interaktywny globus pojawi się wkrótce."
+    },
+    "placeholder": {
+      "comingSoon": "Ta sekcja pojawi się wkrótce. Wkrótce więcej funkcji planowania podróży."
+    }
+  },
+  "common": {
+    "language": "Język"
+  },
+  "validation": {
+    "generic": "Sprawdź to pole.",
+    "firstName": {
+      "required": "Imię jest wymagane."
+    },
+    "lastName": {
+      "required": "Nazwisko jest wymagane."
+    },
+    "email": {
+      "required": "E-mail jest wymagany.",
+      "email": "Podaj prawidłowy adres e-mail."
+    },
+    "password": {
+      "required": "Hasło jest wymagane.",
+      "minLength": "Hasło musi mieć co najmniej 8 znaków."
+    },
+    "confirmPassword": {
+      "required": "Potwierdź hasło.",
+      "mismatch": "Hasła nie są identyczne."
+    }
+  }
+}

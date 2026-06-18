@@ -1,0 +1,140 @@
+{
+  "brand": {
+    "name": "Pindrop",
+    "tagline": "Your AI-Powered Travel Companion",
+    "description": "Plan unforgettable trips with intelligent itineraries, real-time weather insights, and personalized recommendations."
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to continue planning your adventures",
+      "google": "Continue with Google",
+      "divider": "OR CONTINUE WITH EMAIL",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "footer": "Don't have an account?",
+      "signUp": "Sign up"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Join Pindrop and start planning smarter adventures",
+      "firstName": "First name",
+      "firstNamePlaceholder": "John",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Doe",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "submit": "Create account",
+      "footer": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "forgotPassword": {
+      "title": "Forgot password?",
+      "subtitle": "Enter your email and we'll send you a reset link if an account exists.",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send reset link",
+      "footer": "Remember your password?",
+      "backToSignIn": "Back to sign in"
+    },
+    "resetPassword": {
+      "title": "Reset your password",
+      "subtitle": "Choose a strong new password for your account",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "submit": "Update password",
+      "backToSignIn": "Back to sign in"
+    },
+    "oauth": {
+      "completing": "Completing sign in...",
+      "failed": "Google sign-in failed. No token was returned."
+    }
+  },
+  "home": {
+    "eyebrow": "Pindrop",
+    "welcome": "Welcome{{name}}!",
+    "signedInAs": "You are signed in as {{email}}.",
+    "signOut": "Sign out"
+  },
+  "dashboard": {
+    "loading": "Loading your dashboard...",
+    "notifications": "Notifications",
+    "profileMenu": "Open profile menu",
+    "nav": {
+      "label": "Main navigation",
+      "home": "Home",
+      "explore": "Explore",
+      "trips": "Trips",
+      "favorites": "Favorites",
+      "profile": "Profile"
+    },
+    "hero": {
+      "badge": "AI-Powered",
+      "title": "Where to next?",
+      "subtitle": "Let our AI craft the perfect itinerary tailored to your preferences and travel style.",
+      "cta": "Plan New Trip with AI",
+      "loadingSuggestions": "Finding destinations..."
+    },
+    "trips": {
+      "title": "My Trips",
+      "viewAll": "View all",
+      "create": "Create new trip",
+      "creating": "Creating...",
+      "status": {
+        "upcoming": "Upcoming",
+        "planning": "Planning",
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "itineraries": {
+      "title": "Favorite Itineraries",
+      "exploreMore": "Explore more",
+      "by": "by {{author}}",
+      "view": "View"
+    },
+    "globe": {
+      "title": "Interactive Globe Coming Soon",
+      "subtitle": "Explore your trips visually on an interactive 3D globe. See all your destinations and plan routes with ease.",
+      "subtitleWithMarkers": "You have {{count}} destinations mapped across your trips. The interactive globe is coming soon."
+    },
+    "placeholder": {
+      "comingSoon": "This section is coming soon. Stay tuned for more travel planning features."
+    }
+  },
+  "common": {
+    "language": "Language"
+  },
+  "validation": {
+    "generic": "Please check this field.",
+    "firstName": {
+      "required": "First name is required."
+    },
+    "lastName": {
+      "required": "Last name is required."
+    },
+    "email": {
+      "required": "Email is required.",
+      "email": "Enter a valid email address."
+    },
+    "password": {
+      "required": "Password is required.",
+      "minLength": "Password must be at least 8 characters."
+    },
+    "confirmPassword": {
+      "required": "Please confirm your password.",
+      "mismatch": "Passwords do not match."
+    }
+  }
+}

@@ -1,0 +1,36 @@
+@use '../../../../../styles/auth-tokens';
+
+.dashboard-placeholder {
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  min-height: 18rem;
+  padding: 2rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgb(42 52 65 / 80%);
+  background: var(--pindrop-surface);
+  text-align: center;
+}
+
+.dashboard-placeholder__icon {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  background: rgb(52 211 153 / 14%);
+  color: var(--pindrop-primary);
+  font-size: 1.5rem;
+}
+
+.dashboard-placeholder h1 {
+  margin: 0;
+  font-size: 1.375rem;
+}
+
+.dashboard-placeholder p {
+  margin: 0;
+  max-width: 24rem;
+  color: var(--pindrop-text-muted);
+  line-height: 1.55;
+}

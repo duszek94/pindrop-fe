@@ -1,0 +1,21 @@
+<main class="home-page">
+  <section class="home-page__card">
+    <div class="home-page__header">
+      <p class="home-page__eyebrow">{{ 'home.eyebrow' | translate }}</p>
+      <app-language-switcher />
+    </div>
+    <h1>
+      {{
+        'home.welcome'
+          | translate: { name: user()?.firstName ? ', ' + user()?.firstName : '' }
+      }}
+    </h1>
+    <p>{{ 'home.signedInAs' | translate: { email: user()?.email } }}</p>
+    <p-button
+      [label]="'home.signOut' | translate"
+      icon="pi pi-sign-out"
+      styleClass="pindrop-primary-btn"
+      (onClick)="logout()"
+    />
+  </section>
+</main>

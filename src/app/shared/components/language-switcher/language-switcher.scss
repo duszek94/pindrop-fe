@@ -1,0 +1,12 @@
+:host {
+  display: block;
+}
+
+.language-switcher {
+  display: flex;
+  justify-content: flex-end;
+}
+
+:host ::ng-deep .language-switcher__select {
+  min-width: 5.5rem;
+}

@@ -1,0 +1,12 @@
+<div class="language-switcher">
+  <label class="sr-only" for="language-select">{{ 'common.language' | translate }}</label>
+  <p-select
+    inputId="language-select"
+    [options]="languages"
+    optionLabel="label"
+    optionValue="code"
+    [ngModel]="currentLang()"
+    (ngModelChange)="onLanguageChange($event)"
+    styleClass="language-switcher__select"
+  />
+</div>

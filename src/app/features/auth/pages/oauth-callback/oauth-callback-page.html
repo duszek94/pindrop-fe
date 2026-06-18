@@ -1,0 +1,8 @@
+<div class="oauth-callback" @fadeIn>
+  @if (errorMessage(); as message) {
+    <p-message severity="error" [text]="message" />
+  } @else {
+    <p-progressSpinner ariaLabel="Completing sign in" strokeWidth="4" />
+    <p>{{ 'auth.oauth.completing' | translate }}</p>
+  }
+</div>

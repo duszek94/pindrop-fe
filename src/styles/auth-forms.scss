@@ -1,0 +1,337 @@
+.pindrop-auth-card {
+  width: 100%;
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+.pindrop-auth-heading {
+  margin: 0 0 0.625rem;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--pindrop-text);
+}
+
+.pindrop-auth-subheading {
+  margin: 0 0 1.75rem;
+  color: var(--pindrop-text-muted);
+  line-height: 1.55;
+  font-size: 0.9375rem;
+}
+
+.pindrop-field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pindrop-text);
+}
+
+.pindrop-field-error-slot {
+  position: absolute;
+  top: calc(100% + 0.1875rem);
+  left: 0;
+  right: 0;
+  min-height: unset;
+  pointer-events: none;
+}
+
+.pindrop-field-error {
+  display: block;
+  margin: 0;
+  color: var(--pindrop-danger);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.pindrop-link {
+  color: var(--pindrop-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--pindrop-primary-hover);
+  }
+}
+
+.pindrop-footer-text {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: var(--pindrop-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.auth-form__field {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+
+  .pindrop-field-label {
+    margin-bottom: 0;
+  }
+}
+
+.auth-form__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  .pindrop-field-label {
+    margin-bottom: 0;
+  }
+}
+
+.auth-form__social {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.auth-form__actions {
+  width: 100%;
+  padding-top: 0.25rem;
+
+  .p-button,
+  button.p-button {
+    width: 100%;
+  }
+}
+
+.auth-form__row {
+  display: grid;
+  gap: 0.875rem;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .auth-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.social-btn__content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.google-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+}
+
+.p-button,
+button.p-button {
+  border-radius: var(--pindrop-radius);
+  min-height: var(--pindrop-input-height);
+  font-size: 0.9375rem;
+}
+
+.p-button.pindrop-primary-btn,
+.p-button.pindrop-social-btn,
+button.pindrop-social-btn.p-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.p-button.pindrop-primary-btn {
+  background: var(--pindrop-primary);
+  border: 1px solid var(--pindrop-primary);
+  color: var(--pindrop-primary-text);
+  font-weight: 700;
+
+  &:not(:disabled):hover {
+    background: var(--pindrop-primary-hover);
+    border-color: var(--pindrop-primary-hover);
+    color: var(--pindrop-primary-text);
+  }
+
+  .p-button-icon {
+    color: var(--pindrop-primary-text);
+  }
+}
+
+.p-button.pindrop-social-btn,
+button.pindrop-social-btn.p-button {
+  background: var(--pindrop-surface-elevated);
+  border: 1px solid var(--pindrop-border);
+  color: var(--pindrop-text);
+
+  &:not(:disabled):hover {
+    background: #1a222d;
+    border-color: #3d4a5c;
+    color: var(--pindrop-text);
+  }
+}
+
+.p-iconfield,
+.p-password,
+.p-password .p-inputwrapper {
+  display: block;
+  width: 100%;
+}
+
+.p-dark .auth-form .p-inputtext,
+.p-dark .auth-form input.p-inputtext,
+.p-dark .auth-form .p-password .p-password-input,
+.p-dark .pindrop-auth-card .p-inputtext,
+.p-dark .pindrop-auth-card input.p-inputtext,
+.p-dark .pindrop-auth-card .p-password .p-password-input {
+  width: 100%;
+  min-height: var(--pindrop-input-height);
+  padding: 0.75rem 1rem;
+  border-radius: var(--pindrop-radius);
+  background: var(--pindrop-surface-elevated);
+  border: 1px solid var(--pindrop-border);
+  color: var(--pindrop-text);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.p-dark .auth-form .p-inputtext:-webkit-autofill,
+.p-dark .auth-form .p-password .p-password-input:-webkit-autofill,
+.p-dark .pindrop-auth-card .p-inputtext:-webkit-autofill,
+.p-dark .pindrop-auth-card .p-password .p-password-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--pindrop-text);
+  caret-color: var(--pindrop-text);
+  box-shadow: 0 0 0 1000px var(--pindrop-surface-elevated) inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+.p-dark .auth-form .p-iconfield .p-inputtext,
+.p-dark .pindrop-auth-card .p-iconfield .p-inputtext {
+  padding-left: 2.75rem;
+}
+
+.p-dark .auth-form .p-iconfield .p-inputicon,
+.p-dark .pindrop-auth-card .p-iconfield .p-inputicon {
+  color: var(--pindrop-text-muted);
+  inset-inline-start: 1rem;
+}
+
+.p-dark .auth-form .p-password .p-password-input,
+.p-dark .pindrop-auth-card .p-password .p-password-input {
+  padding-right: 2.75rem;
+}
+
+.p-dark .auth-form .p-iconfield .p-password .p-password-input,
+.p-dark .pindrop-auth-card .p-iconfield .p-password .p-password-input {
+  padding-left: 2.75rem;
+}
+
+.p-dark .auth-form .p-password .p-password-toggle-mask-icon,
+.p-dark .auth-form .p-password .p-password-unmask-icon,
+.p-dark .pindrop-auth-card .p-password .p-password-toggle-mask-icon,
+.p-dark .pindrop-auth-card .p-password .p-password-unmask-icon {
+  color: var(--pindrop-text-muted);
+  inset-inline-end: 1rem;
+}
+
+.p-dark .auth-form .p-inputtext::placeholder,
+.p-dark .auth-form .p-password-input::placeholder,
+.p-dark .pindrop-auth-card .p-inputtext::placeholder,
+.p-dark .pindrop-auth-card .p-password-input::placeholder {
+  color: rgb(148 163 184 / 55%);
+}
+
+.p-dark .auth-form .p-inputtext:enabled:hover,
+.p-dark .auth-form .p-password-input:enabled:hover,
+.p-dark .pindrop-auth-card .p-inputtext:enabled:hover,
+.p-dark .pindrop-auth-card .p-password-input:enabled:hover {
+  border-color: #3d4a5c;
+}
+
+.p-dark .auth-form .p-inputtext:enabled:focus,
+.p-dark .auth-form .p-password-input:enabled:focus,
+.p-dark .pindrop-auth-card .p-inputtext:enabled:focus,
+.p-dark .pindrop-auth-card .p-password-input:enabled:focus {
+  outline: none;
+  border-color: var(--pindrop-primary);
+  box-shadow: 0 0 0 3px rgb(52 211 153 / 18%);
+}
+
+.p-dark .auth-form .p-inputtext.ng-invalid.ng-touched,
+.p-dark .auth-form .p-password.ng-invalid.ng-touched .p-password-input,
+.p-dark .pindrop-auth-card .p-inputtext.ng-invalid.ng-touched,
+.p-dark .pindrop-auth-card .p-password.ng-invalid.ng-touched .p-password-input {
+  border-color: var(--pindrop-danger);
+  box-shadow: 0 0 0 3px rgb(248 113 113 / 12%);
+}
+
+.p-dark .auth-form .p-inputtext.ng-invalid.ng-touched:enabled:focus,
+.p-dark .auth-form .p-password.ng-invalid.ng-touched .p-password-input:enabled:focus,
+.p-dark .pindrop-auth-card .p-inputtext.ng-invalid.ng-touched:enabled:focus,
+.p-dark .pindrop-auth-card .p-password.ng-invalid.ng-touched .p-password-input:enabled:focus {
+  border-color: var(--pindrop-danger);
+  box-shadow: 0 0 0 3px rgb(248 113 113 / 18%);
+}
+
+.p-divider {
+  margin: 1.25rem 0;
+
+  &::before,
+  &::after {
+    border-color: var(--pindrop-border);
+  }
+}
+
+.p-divider-content {
+  color: var(--pindrop-text-muted) !important;
+  background: var(--pindrop-bg) !important;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding-inline: 0.875rem;
+}
+
+.p-message {
+  border-radius: var(--pindrop-radius);
+}
+
+.p-message.p-message-error,
+.p-message.p-message-success {
+  margin-bottom: 1rem;
+}
+
+.p-select,
+.p-select-overlay {
+  border-radius: var(--pindrop-radius);
+}
+
+.p-select {
+  min-height: 2.5rem;
+  background: var(--pindrop-surface-elevated);
+  border: 1px solid var(--pindrop-border);
+  color: var(--pindrop-text);
+}
+
+.p-select:not(.p-disabled):hover {
+  border-color: #3d4a5c;
+}
+
+.p-select-label {
+  color: var(--pindrop-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}

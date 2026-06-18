@@ -1,0 +1,133 @@
+<div class="pindrop-auth-card" @staggerFadeSlide>
+  <h1 class="pindrop-auth-heading animate-item">{{ 'auth.register.title' | translate }}</h1>
+  <p class="pindrop-auth-subheading animate-item">{{ 'auth.register.subtitle' | translate }}</p>
+
+  @if (errorMessage(); as message) {
+    <p-message severity="error" [text]="message" styleClass="animate-item w-full" />
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+    <div class="auth-form__row animate-item">
+      <div class="auth-form__field">
+        <label class="pindrop-field-label" for="firstName">{{
+          'auth.register.firstName' | translate
+        }}</label>
+        <p-iconfield iconPosition="left">
+          <p-inputicon styleClass="pi pi-user" />
+          <input
+            pInputText
+            id="firstName"
+            autocomplete="given-name"
+            [placeholder]="'auth.register.firstNamePlaceholder' | translate"
+            formControlName="firstName"
+          />
+        </p-iconfield>
+        <div class="pindrop-field-error-slot" aria-live="polite">
+          @if (shouldShowError('firstName') && getErrorKey('firstName'); as errorKey) {
+            <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+          }
+        </div>
+      </div>
+
+      <div class="auth-form__field">
+        <label class="pindrop-field-label" for="lastName">{{
+          'auth.register.lastName' | translate
+        }}</label>
+        <p-iconfield iconPosition="left">
+          <p-inputicon styleClass="pi pi-user" />
+          <input
+            pInputText
+            id="lastName"
+            autocomplete="family-name"
+            [placeholder]="'auth.register.lastNamePlaceholder' | translate"
+            formControlName="lastName"
+          />
+        </p-iconfield>
+        <div class="pindrop-field-error-slot" aria-live="polite">
+          @if (shouldShowError('lastName') && getErrorKey('lastName'); as errorKey) {
+            <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="animate-item auth-form__field">
+      <label class="pindrop-field-label" for="email">{{ 'auth.register.email' | translate }}</label>
+      <p-iconfield iconPosition="left">
+        <p-inputicon styleClass="pi pi-envelope" />
+        <input
+          pInputText
+          id="email"
+          type="email"
+          autocomplete="email"
+          [placeholder]="'auth.register.emailPlaceholder' | translate"
+          formControlName="email"
+        />
+      </p-iconfield>
+      <div class="pindrop-field-error-slot" aria-live="polite">
+        @if (shouldShowError('email') && getErrorKey('email'); as errorKey) {
+          <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+        }
+      </div>
+    </div>
+
+    <div class="animate-item auth-form__field">
+      <label class="pindrop-field-label" for="password">{{
+        'auth.register.password' | translate
+      }}</label>
+      <p-iconfield iconPosition="left">
+        <p-inputicon styleClass="pi pi-lock" />
+        <p-password
+          inputId="password"
+          formControlName="password"
+          [toggleMask]="true"
+          [placeholder]="'auth.register.passwordPlaceholder' | translate"
+          autocomplete="new-password"
+        />
+      </p-iconfield>
+      <div class="pindrop-field-error-slot" aria-live="polite">
+        @if (shouldShowError('password') && getErrorKey('password'); as errorKey) {
+          <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+        }
+      </div>
+    </div>
+
+    <div class="animate-item auth-form__field">
+      <label class="pindrop-field-label" for="confirmPassword">{{
+        'auth.register.confirmPassword' | translate
+      }}</label>
+      <p-iconfield iconPosition="left">
+        <p-inputicon styleClass="pi pi-lock" />
+        <p-password
+          inputId="confirmPassword"
+          formControlName="confirmPassword"
+          [feedback]="false"
+          [toggleMask]="true"
+          [placeholder]="'auth.register.confirmPasswordPlaceholder' | translate"
+          autocomplete="new-password"
+        />
+      </p-iconfield>
+      <div class="pindrop-field-error-slot" aria-live="polite">
+        @if (shouldShowError('confirmPassword') && getErrorKey('confirmPassword'); as errorKey) {
+          <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+        }
+      </div>
+    </div>
+
+    <div class="animate-item auth-form__actions">
+      <p-button
+        type="submit"
+        [label]="'auth.register.submit' | translate"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        styleClass="pindrop-primary-btn w-full"
+        [loading]="loading()"
+      />
+    </div>
+  </form>
+
+  <p class="pindrop-footer-text animate-item">
+    {{ 'auth.register.footer' | translate }}
+    <a routerLink="/auth/login" class="pindrop-link">{{ 'auth.register.signIn' | translate }}</a>
+  </p>
+</div>

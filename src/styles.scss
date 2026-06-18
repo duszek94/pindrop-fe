@@ -1,1 +1,51 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'styles/auth-tokens';
+@use 'styles/auth-forms';
+@use 'styles/auth-layout';
+@use 'primeicons/primeicons.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background: var(--pindrop-bg);
+  color: var(--pindrop-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.p-dark {
+  color-scheme: dark;
+}
+
+.pindrop-auth-shell {
+  min-height: 100dvh;
+  background: var(--pindrop-bg);
+}

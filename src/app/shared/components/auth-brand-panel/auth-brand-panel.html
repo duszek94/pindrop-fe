@@ -1,0 +1,29 @@
+<div class="brand-panel" @fadeIn>
+  <div class="brand-panel__content">
+    <div class="brand-panel__logo">
+      <span class="brand-panel__logo-icon" aria-hidden="true">
+        <i class="pi pi-map-marker"></i>
+      </span>
+      <span class="brand-panel__logo-text">{{ 'brand.name' | translate }}</span>
+    </div>
+
+    <div class="brand-panel__hero">
+      <h1>{{ 'brand.tagline' | translate }}</h1>
+      <p>{{ 'brand.description' | translate }}</p>
+    </div>
+
+    <div class="brand-panel__features">
+      @for (feature of features; track feature.icon) {
+        <div class="brand-panel__feature">
+          <span
+            class="brand-panel__feature-icon"
+            [class]="'brand-panel__feature-icon--' + feature.tone"
+            aria-hidden="true"
+          >
+            <i [class]="'pi ' + feature.icon"></i>
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+</div>

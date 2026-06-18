@@ -1,0 +1,184 @@
+<div class="dashboard-page">
+  @if (loading() && !trips().length && !itineraries().length) {
+    <p class="dashboard-page__status">{{ 'dashboard.loading' | translate }}</p>
+  }
+
+  @if (error()) {
+    <p class="dashboard-page__status dashboard-page__status--error" role="alert">{{ error() }}</p>
+  }
+
+  <section class="dashboard-hero">
+    <div class="dashboard-hero__content">
+      <span class="dashboard-badge dashboard-badge--ai">
+        <i class="pi pi-sparkles" aria-hidden="true"></i>
+        {{ 'dashboard.hero.badge' | translate }}
+      </span>
+      <h1 class="dashboard-hero__title">{{ 'dashboard.hero.title' | translate }}</h1>
+      <p class="dashboard-hero__subtitle">{{ 'dashboard.hero.subtitle' | translate }}</p>
+      <button
+        pButton
+        type="button"
+        class="dashboard-cta-btn"
+        [disabled]="loadingSuggestions()"
+        (click)="loadAiSuggestions()"
+      >
+        <span class="dashboard-cta-btn__content">
+          <i class="pi pi-sparkles" aria-hidden="true"></i>
+          <span>
+            {{
+              loadingSuggestions()
+                ? ('dashboard.hero.loadingSuggestions' | translate)
+                : ('dashboard.hero.cta' | translate)
+            }}
+          </span>
+          <i class="pi pi-angle-right" aria-hidden="true"></i>
+        </span>
+      </button>
+
+      @if (showSuggestions() && suggestions().length) {
+        <div class="dashboard-suggestions">
+          @for (destination of suggestions(); track destination.name) {
+            <article class="dashboard-suggestion-card">
+              <h3 class="dashboard-suggestion-card__title">
+                {{ destination.name }}, {{ destination.country }}
+              </h3>
+              <p class="dashboard-suggestion-card__reason">{{ destination.reason }}</p>
+            </article>
+          }
+        </div>
+      }
+    </div>
+    <div class="dashboard-hero__globe" aria-hidden="true">
+      <i class="pi pi-globe"></i>
+    </div>
+  </section>
+
+  <section class="dashboard-section">
+    <div class="dashboard-section__header">
+      <h2 class="dashboard-section__title">
+        <i class="pi pi-map-marker" aria-hidden="true"></i>
+        {{ 'dashboard.trips.title' | translate }}
+      </h2>
+      <a routerLink="/trips" class="dashboard-section__link">
+        {{ 'dashboard.trips.viewAll' | translate }}
+        <i class="pi pi-angle-right" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <div class="dashboard-trips-grid">
+      <button
+        type="button"
+        class="dashboard-create-trip"
+        [disabled]="creatingTrip()"
+        (click)="createTrip()"
+      >
+        <span class="dashboard-create-trip__icon" aria-hidden="true">
+          <i class="pi pi-plus"></i>
+        </span>
+        <span>
+          {{
+            creatingTrip() ? ('dashboard.trips.creating' | translate) : ('dashboard.trips.create' | translate)
+          }}
+        </span>
+      </button>
+
+      @for (trip of trips(); track trip.id) {
+        <article class="dashboard-trip-card">
+          <div class="dashboard-trip-card__top">
+            <span
+              class="dashboard-trip-card__icon"
+              [class]="'dashboard-trip-card__icon--' + trip.iconTone"
+              aria-hidden="true"
+            >
+              <i [class]="'pi ' + trip.icon"></i>
+            </span>
+            <span
+              class="dashboard-status-badge"
+              [class]="'dashboard-status-badge--' + trip.status"
+            >
+              {{ 'dashboard.trips.status.' + trip.status | translate }}
+            </span>
+          </div>
+          <h3 class="dashboard-trip-card__title">{{ trip.title }}</h3>
+          <div class="dashboard-trip-card__meta">
+            @if (trip.dateRange) {
+              <span>
+                <i class="pi pi-calendar" aria-hidden="true"></i>
+                {{ trip.dateRange }}
+              </span>
+            }
+            @if (trip.duration) {
+              <span>
+                <i class="pi pi-clock" aria-hidden="true"></i>
+                {{ trip.duration }}
+              </span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="dashboard-section">
+    <div class="dashboard-section__header">
+      <h2 class="dashboard-section__title">
+        <i class="pi pi-heart" aria-hidden="true"></i>
+        {{ 'dashboard.itineraries.title' | translate }}
+      </h2>
+      <a routerLink="/explore" class="dashboard-section__link">
+        {{ 'dashboard.itineraries.exploreMore' | translate }}
+        <i class="pi pi-angle-right" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <div class="dashboard-itineraries-grid">
+      @for (item of itineraries(); track item.id) {
+        <article class="dashboard-itinerary-card">
+          @if (item.coverImageUrl) {
+            <img
+              class="dashboard-itinerary-card__cover"
+              [src]="item.coverImageUrl"
+              [alt]="item.title"
+            />
+          } @else {
+            <span
+              class="dashboard-itinerary-card__avatar"
+              [class]="'dashboard-itinerary-card__avatar--' + item.iconTone"
+              aria-hidden="true"
+            >
+              {{ item.initials }}
+            </span>
+          }
+          <div class="dashboard-itinerary-card__body">
+            <h3 class="dashboard-itinerary-card__title">{{ item.title }}</h3>
+            <div class="dashboard-itinerary-card__footer">
+              <span class="dashboard-itinerary-card__likes">
+                <i
+                  [class]="item.likedByCurrentUser ? 'pi pi-heart-fill' : 'pi pi-heart'"
+                  aria-hidden="true"
+                ></i>
+                {{ item.likes }}
+              </span>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="dashboard-globe-teaser">
+    <div class="dashboard-globe-teaser__icon" aria-hidden="true">
+      <i class="pi pi-globe"></i>
+    </div>
+    <div class="dashboard-globe-teaser__content">
+      <h2 class="dashboard-globe-teaser__title">{{ 'dashboard.globe.title' | translate }}</h2>
+      <p class="dashboard-globe-teaser__text">
+        @if (geoMarkerCount() > 0) {
+          {{ 'dashboard.globe.subtitleWithMarkers' | translate: { count: geoMarkerCount() } }}
+        } @else {
+          {{ 'dashboard.globe.subtitle' | translate }}
+        }
+      </p>
+    </div>
+  </section>
+</div>
