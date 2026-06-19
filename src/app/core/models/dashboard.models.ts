@@ -8,6 +8,7 @@ export interface Trip {
   status: TripStatus;
   icon: string;
   iconTone: 'rose' | 'amber' | 'emerald' | 'sky';
+  coverImageUrl?: string | null;
 }
 
 export interface FavoriteItinerary {

@@ -90,6 +90,11 @@
       "viewAll": "Zobacz wszystkie",
       "create": "Utwórz nową wycieczkę",
       "creating": "Tworzenie...",
+      "empty": {
+        "title": "Brak wycieczek",
+        "subtitle": "Twoje przygody pojawią się tutaj. Zacznij od zaplanowania pierwszej wycieczki z AI w kilku krokach.",
+        "popularDestinations": "Popularne destynacje"
+      },
       "status": {
         "upcoming": "Nadchodząca",
         "planning": "Planowanie",
@@ -102,7 +107,12 @@
       "title": "Ulubione plany",
       "exploreMore": "Odkryj więcej",
       "by": "autor: {{author}}",
-      "view": "Zobacz"
+      "view": "Zobacz",
+      "empty": {
+        "title": "Brak ulubionych",
+        "subtitle": "Odkrywaj plany podróży innych podróżników i zapisuj te, które Ci się podobają. Pojawią się tutaj do szybkiego dostępu.",
+        "cta": "Przeglądaj plany"
+      }
     },
     "globe": {
       "title": "Interaktywny globus już wkrótce",
@@ -135,6 +145,21 @@
     "confirmPassword": {
       "required": "Potwierdź hasło.",
       "mismatch": "Hasła nie są identyczne."
+    },
+    "planTrip": {
+      "destination": {
+        "required": "Destynacja jest wymagana.",
+        "pickFromList": "Wybierz destynację z listy podpowiedzi lub popularnych miejsc."
+      },
+      "startDate": {
+        "required": "Data rozpoczęcia jest wymagana.",
+        "past": "Data rozpoczęcia nie może być w przeszłości."
+      },
+      "endDate": {
+        "required": "Data zakończenia jest wymagana.",
+        "past": "Data zakończenia nie może być w przeszłości.",
+        "beforeStart": "Data zakończenia musi być taka sama lub późniejsza niż data rozpoczęcia."
+      }
     }
   }
 }

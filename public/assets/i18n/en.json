@@ -90,6 +90,11 @@
       "viewAll": "View all",
       "create": "Create new trip",
       "creating": "Creating...",
+      "empty": {
+        "title": "No trips yet",
+        "subtitle": "Your adventures will appear here. Start by letting our AI plan your first trip in just a few taps.",
+        "popularDestinations": "Popular destinations"
+      },
       "status": {
         "upcoming": "Upcoming",
         "planning": "Planning",
@@ -102,7 +107,12 @@
       "title": "Favorite Itineraries",
       "exploreMore": "Explore more",
       "by": "by {{author}}",
-      "view": "View"
+      "view": "View",
+      "empty": {
+        "title": "No favorites yet",
+        "subtitle": "Discover itineraries shared by fellow travelers and save the ones you love. They'll show up here for quick access.",
+        "cta": "Explore itineraries"
+      }
     },
     "globe": {
       "title": "Interactive Globe Coming Soon",
@@ -135,6 +145,21 @@
     "confirmPassword": {
       "required": "Please confirm your password.",
       "mismatch": "Passwords do not match."
+    },
+    "planTrip": {
+      "destination": {
+        "required": "Destination is required.",
+        "pickFromList": "Select a destination from the suggestions or popular list."
+      },
+      "startDate": {
+        "required": "Start date is required.",
+        "past": "Start date cannot be in the past."
+      },
+      "endDate": {
+        "required": "End date is required.",
+        "past": "End date cannot be in the past.",
+        "beforeStart": "End date must be on or after the start date."
+      }
     }
   }
 }

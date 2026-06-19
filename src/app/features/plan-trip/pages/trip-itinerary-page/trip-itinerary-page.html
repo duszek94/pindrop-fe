@@ -1,0 +1,59 @@
+@if (itinerary(); as data) {
+  <div class="trip-itinerary">
+    <header class="trip-itinerary__header">
+      <button type="button" class="trip-itinerary__back" (click)="back()">
+        <i class="pi pi-angle-left" aria-hidden="true"></i>
+        Back
+      </button>
+      <h1>{{ data.title }}</h1>
+      <p class="trip-itinerary__subtitle">{{ data.destination }} · {{ data.selectedProposalType }}</p>
+    </header>
+
+    <div class="trip-itinerary__days">
+      @for (day of data.days; track day.dayNumber) {
+        <button
+          type="button"
+          class="trip-itinerary__day"
+          [class.trip-itinerary__day--active]="selectedDay() === day.dayNumber"
+          (click)="selectDay(day.dayNumber)"
+        >
+          Day {{ day.dayNumber }}
+          <span>{{ day.date | date: 'MMM d' }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="trip-itinerary__timeline">
+      @for (activity of data.activities; track activity.id) {
+        <article class="trip-itinerary__activity">
+          <span class="trip-itinerary__time">{{ activity.startTime }}</span>
+          <div class="trip-itinerary__body">
+            <span class="trip-itinerary__type">{{ activity.type }}</span>
+            <h3>{{ activity.title }}</h3>
+            <p>{{ activity.description }}</p>
+            @if (activity.tempC != null) {
+              <span class="trip-itinerary__weather">{{ activity.tempC }}°C</span>
+            }
+            <button type="button" class="trip-itinerary__regen" (click)="regenerateActivity(activity.id)">
+              <i class="pi pi-sparkles" aria-hidden="true"></i>
+              Regenerate for current weather
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+
+    <footer class="trip-itinerary__footer">
+      <button pButton type="button" class="p-button-outlined" [disabled]="loading()" (click)="regenerateAll()">
+        Regenerate
+      </button>
+      <button pButton type="button" [disabled]="loading()" (click)="saveTrip()">Save Trip</button>
+    </footer>
+  </div>
+} @else if (loading()) {
+  <p class="trip-itinerary__loading">Loading itinerary...</p>
+}
+
+@if (error()) {
+  <p class="trip-itinerary__error">{{ error() }}</p>
+}

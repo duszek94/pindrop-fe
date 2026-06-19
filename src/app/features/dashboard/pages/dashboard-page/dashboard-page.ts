@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { catchError, finalize, of } from 'rxjs';
@@ -7,6 +7,7 @@ import { catchError, finalize, of } from 'rxjs';
 import { AiApiService } from '../../../../core/api/ai-api.service';
 import { TripApiService } from '../../../../core/api/trip-api.service';
 import type { SuggestedDestinationResponse } from '../../../../core/models/dashboard-api.models';
+import { POPULAR_DESTINATIONS } from '../../data/popular-destinations';
 import { DashboardStore } from '../../services/dashboard.store';
 
 @Component({
@@ -17,11 +18,14 @@ import { DashboardStore } from '../../services/dashboard.store';
 })
 export class DashboardPage implements OnInit {
   private readonly dashboardStore = inject(DashboardStore);
+  private readonly router = inject(Router);
   private readonly tripApi = inject(TripApiService);
   private readonly aiApi = inject(AiApiService);
 
   protected readonly trips = this.dashboardStore.trips;
   protected readonly itineraries = this.dashboardStore.favoriteItineraries;
+  protected readonly hasTrips = this.dashboardStore.hasTrips;
+  protected readonly hasItineraries = this.dashboardStore.hasItineraries;
   protected readonly loading = this.dashboardStore.loading;
   protected readonly error = this.dashboardStore.error;
   protected readonly geoMarkerCount = signal(0);
@@ -29,13 +33,14 @@ export class DashboardPage implements OnInit {
   protected readonly loadingSuggestions = signal(false);
   protected readonly suggestions = signal<SuggestedDestinationResponse[]>([]);
   protected readonly showSuggestions = signal(false);
+  protected readonly popularDestinations = POPULAR_DESTINATIONS;
 
   ngOnInit(): void {
     this.dashboardStore.load();
     this.loadGeoMarkers();
   }
 
-  protected createTrip(): void {
+  protected startPlanTrip(): void {
     if (this.creatingTrip()) {
       return;
     }
@@ -49,7 +54,7 @@ export class DashboardPage implements OnInit {
       )
       .subscribe((response) => {
         if (response) {
-          this.dashboardStore.reload();
+          void this.router.navigate(['/plan-trip', response.tripId]);
         }
       });
   }

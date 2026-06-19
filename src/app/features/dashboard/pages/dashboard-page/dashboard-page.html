@@ -19,15 +19,15 @@
         pButton
         type="button"
         class="dashboard-cta-btn"
-        [disabled]="loadingSuggestions()"
-        (click)="loadAiSuggestions()"
+        [disabled]="creatingTrip()"
+        (click)="startPlanTrip()"
       >
         <span class="dashboard-cta-btn__content">
           <i class="pi pi-sparkles" aria-hidden="true"></i>
           <span>
             {{
-              loadingSuggestions()
-                ? ('dashboard.hero.loadingSuggestions' | translate)
+              creatingTrip()
+                ? ('dashboard.trips.creating' | translate)
                 : ('dashboard.hero.cta' | translate)
             }}
           </span>
@@ -59,18 +59,47 @@
         <i class="pi pi-map-marker" aria-hidden="true"></i>
         {{ 'dashboard.trips.title' | translate }}
       </h2>
-      <a routerLink="/trips" class="dashboard-section__link">
-        {{ 'dashboard.trips.viewAll' | translate }}
-        <i class="pi pi-angle-right" aria-hidden="true"></i>
-      </a>
+      @if (hasTrips()) {
+        <a routerLink="/trips" class="dashboard-section__link">
+          {{ 'dashboard.trips.viewAll' | translate }}
+          <i class="pi pi-angle-right" aria-hidden="true"></i>
+        </a>
+      }
     </div>
 
-    <div class="dashboard-trips-grid">
+    @if (loading()) {
+      <p class="dashboard-section__loading">{{ 'dashboard.loading' | translate }}</p>
+    } @else if (!hasTrips()) {
+      <div class="dashboard-empty dashboard-empty--trips">
+        <span class="dashboard-empty__icon dashboard-empty__icon--trips" aria-hidden="true">
+          <i class="pi pi-map-marker"></i>
+        </span>
+        <h3 class="dashboard-empty__title">{{ 'dashboard.trips.empty.title' | translate }}</h3>
+        <p class="dashboard-empty__text">{{ 'dashboard.trips.empty.subtitle' | translate }}</p>
+        <p class="dashboard-empty__label">
+          {{ 'dashboard.trips.empty.popularDestinations' | translate }}
+        </p>
+        <div class="dashboard-empty__chips">
+          @for (destination of popularDestinations; track destination) {
+            <button
+              type="button"
+              class="dashboard-destination-chip"
+              [disabled]="creatingTrip()"
+              (click)="startPlanTrip()"
+            >
+              <i class="pi pi-map-marker" aria-hidden="true"></i>
+              {{ destination }}
+            </button>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="dashboard-trips-grid">
       <button
         type="button"
         class="dashboard-create-trip"
         [disabled]="creatingTrip()"
-        (click)="createTrip()"
+        (click)="startPlanTrip()"
       >
         <span class="dashboard-create-trip__icon" aria-hidden="true">
           <i class="pi pi-plus"></i>
@@ -84,54 +113,83 @@
 
       @for (trip of trips(); track trip.id) {
         <article class="dashboard-trip-card">
-          <div class="dashboard-trip-card__top">
+          <div class="dashboard-trip-card__media">
+            @if (trip.coverImageUrl) {
+              <img
+                class="dashboard-trip-card__cover"
+                [src]="trip.coverImageUrl"
+                [alt]="trip.title"
+                loading="lazy"
+              />
+            } @else {
+              <div
+                class="dashboard-trip-card__cover dashboard-trip-card__cover--fallback"
+                [class]="'dashboard-trip-card__cover--' + trip.iconTone"
+                aria-hidden="true"
+              >
+                <i [class]="'pi ' + trip.icon"></i>
+              </div>
+            }
             <span
-              class="dashboard-trip-card__icon"
-              [class]="'dashboard-trip-card__icon--' + trip.iconTone"
-              aria-hidden="true"
-            >
-              <i [class]="'pi ' + trip.icon"></i>
-            </span>
-            <span
-              class="dashboard-status-badge"
+              class="dashboard-status-badge dashboard-trip-card__badge"
               [class]="'dashboard-status-badge--' + trip.status"
             >
               {{ 'dashboard.trips.status.' + trip.status | translate }}
             </span>
           </div>
-          <h3 class="dashboard-trip-card__title">{{ trip.title }}</h3>
-          <div class="dashboard-trip-card__meta">
-            @if (trip.dateRange) {
-              <span>
-                <i class="pi pi-calendar" aria-hidden="true"></i>
-                {{ trip.dateRange }}
-              </span>
-            }
-            @if (trip.duration) {
-              <span>
-                <i class="pi pi-clock" aria-hidden="true"></i>
-                {{ trip.duration }}
-              </span>
-            }
+          <div class="dashboard-trip-card__body">
+            <h3 class="dashboard-trip-card__title">{{ trip.title }}</h3>
+            <div class="dashboard-trip-card__meta">
+              @if (trip.dateRange) {
+                <span>
+                  <i class="pi pi-calendar" aria-hidden="true"></i>
+                  {{ trip.dateRange }}
+                </span>
+              }
+              @if (trip.duration) {
+                <span>
+                  <i class="pi pi-clock" aria-hidden="true"></i>
+                  {{ trip.duration }}
+                </span>
+              }
+            </div>
           </div>
         </article>
       }
     </div>
+    }
   </section>
 
   <section class="dashboard-section">
     <div class="dashboard-section__header">
-      <h2 class="dashboard-section__title">
+      <h2 class="dashboard-section__title dashboard-section__title--favorites">
         <i class="pi pi-heart" aria-hidden="true"></i>
         {{ 'dashboard.itineraries.title' | translate }}
       </h2>
-      <a routerLink="/explore" class="dashboard-section__link">
-        {{ 'dashboard.itineraries.exploreMore' | translate }}
-        <i class="pi pi-angle-right" aria-hidden="true"></i>
-      </a>
+      @if (hasItineraries()) {
+        <a routerLink="/explore" class="dashboard-section__link">
+          {{ 'dashboard.itineraries.exploreMore' | translate }}
+          <i class="pi pi-angle-right" aria-hidden="true"></i>
+        </a>
+      }
     </div>
 
-    <div class="dashboard-itineraries-grid">
+    @if (loading()) {
+      <p class="dashboard-section__loading">{{ 'dashboard.loading' | translate }}</p>
+    } @else if (!hasItineraries()) {
+      <div class="dashboard-empty dashboard-empty--favorites">
+        <span class="dashboard-empty__icon dashboard-empty__icon--favorites" aria-hidden="true">
+          <i class="pi pi-heart"></i>
+        </span>
+        <h3 class="dashboard-empty__title">{{ 'dashboard.itineraries.empty.title' | translate }}</h3>
+        <p class="dashboard-empty__text">{{ 'dashboard.itineraries.empty.subtitle' | translate }}</p>
+        <a routerLink="/explore" class="dashboard-empty__cta">
+          <i class="pi pi-search" aria-hidden="true"></i>
+          {{ 'dashboard.itineraries.empty.cta' | translate }}
+        </a>
+      </div>
+    } @else {
+      <div class="dashboard-itineraries-grid">
       @for (item of itineraries(); track item.id) {
         <article class="dashboard-itinerary-card">
           @if (item.coverImageUrl) {
@@ -164,6 +222,7 @@
         </article>
       }
     </div>
+    }
   </section>
 
   <section class="dashboard-globe-teaser">

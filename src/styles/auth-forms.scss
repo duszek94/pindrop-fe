@@ -28,23 +28,6 @@
   color: var(--pindrop-text);
 }
 
-.pindrop-field-error-slot {
-  position: absolute;
-  top: calc(100% + 0.1875rem);
-  left: 0;
-  right: 0;
-  min-height: unset;
-  pointer-events: none;
-}
-
-.pindrop-field-error {
-  display: block;
-  margin: 0;
-  color: var(--pindrop-danger);
-  font-size: 0.8125rem;
-  line-height: 1.4;
-}
-
 .pindrop-link {
   color: var(--pindrop-primary);
   text-decoration: none;
@@ -75,6 +58,7 @@
   position: relative;
   display: grid;
   gap: 0.5rem;
+  padding-bottom: 1.375rem;
 
   .pindrop-field-label {
     margin-bottom: 0;

@@ -4,6 +4,7 @@ import type {
   TripStatusApi,
 } from '../../../core/models/dashboard-api.models';
 import type { FavoriteItinerary, Trip, TripStatus } from '../../../core/models/dashboard.models';
+import { resolveDestinationImage } from '../../plan-trip/data/wizard-destinations';
 
 const TRIP_ICONS: Array<{ icon: string; iconTone: Trip['iconTone'] }> = [
   { icon: 'pi-building', iconTone: 'rose' },
@@ -63,6 +64,26 @@ function initialsFromTitle(title: string): string {
   return title.slice(0, 2).toUpperCase();
 }
 
+function isUsableImageUrl(url: string | null | undefined): url is string {
+  if (!url) {
+    return false;
+  }
+
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/assets/');
+}
+
+function resolveTripCoverImage(trip: TripResponse): string | null {
+  if (isUsableImageUrl(trip.coverImageUrl)) {
+    return trip.coverImageUrl;
+  }
+
+  return resolveDestinationImage(trip.destination || trip.title) ?? null;
+}
+
+function resolveItineraryCoverImage(url: string | null): string | null {
+  return isUsableImageUrl(url) ? url : null;
+}
+
 export function mapTrip(trip: TripResponse, index: number): Trip {
   const icon = TRIP_ICONS[index % TRIP_ICONS.length];
 
@@ -74,6 +95,7 @@ export function mapTrip(trip: TripResponse, index: number): Trip {
     status: STATUS_MAP[trip.status] ?? 'planning',
     icon: icon.icon,
     iconTone: icon.iconTone,
+    coverImageUrl: resolveTripCoverImage(trip),
   };
 }
 
@@ -88,7 +110,7 @@ export function mapItinerary(itinerary: ItineraryResponse, index: number): Favor
     likes: itinerary.likeCount,
     initials: initialsFromTitle(itinerary.title),
     iconTone: ITINERARY_TONES[index % ITINERARY_TONES.length],
-    coverImageUrl: itinerary.coverImageUrl,
+    coverImageUrl: resolveItineraryCoverImage(itinerary.coverImageUrl),
     likedByCurrentUser: itinerary.likedByCurrentUser,
   };
 }

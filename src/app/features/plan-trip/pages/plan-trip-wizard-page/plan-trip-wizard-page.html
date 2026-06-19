@@ -1,0 +1,237 @@
+<div class="plan-trip">
+  <header class="plan-trip__header">
+    <button type="button" class="plan-trip__back" (click)="back()">
+      <i class="pi pi-angle-left" aria-hidden="true"></i>
+      Back
+    </button>
+
+    <nav class="plan-trip__progress" aria-label="Wizard progress">
+      @for (wizardStep of wizardSteps; track wizardStep.id; let last = $last) {
+        <div
+          class="plan-trip__progress-step"
+          [class.plan-trip__progress-step--active]="step() >= wizardStep.id"
+          [class.plan-trip__progress-step--current]="step() === wizardStep.id"
+        >
+          <span class="plan-trip__progress-dot">
+            <i [class]="'pi ' + wizardStep.icon" aria-hidden="true"></i>
+          </span>
+          <span class="plan-trip__progress-label">{{ wizardStep.label }}</span>
+        </div>
+        @if (!last) {
+          <span
+            class="plan-trip__progress-line"
+            [class.plan-trip__progress-line--active]="step() > wizardStep.id"
+            aria-hidden="true"
+          ></span>
+        }
+      }
+    </nav>
+  </header>
+
+  @if (error()) {
+    <p class="plan-trip__error" role="alert">{{ error() | translate }}</p>
+  }
+
+  @if (step() === 1) {
+    <section class="plan-trip__section">
+      <h1 class="plan-trip__title">Where do you want to go?</h1>
+      <p class="plan-trip__subtitle">Enter your destination and travel dates</p>
+
+      <div class="plan-trip__fields">
+      <div class="pindrop-field plan-trip__destination-field">
+        <label class="plan-trip__label" for="destination">Destination</label>
+        <div
+          class="plan-trip__search"
+          [class.plan-trip__search--invalid]="shouldShowDestinationError()"
+        >
+          <i class="pi pi-search" aria-hidden="true"></i>
+          <input
+            id="destination"
+            type="text"
+            placeholder="Search city, country, or region..."
+            [value]="destinationForm().destination"
+            (input)="onDestinationInput($any($event.target).value)"
+            (blur)="touched.update((s) => ({ ...s, destination: true }))"
+          />
+        </div>
+        <div class="pindrop-field-error-slot" aria-live="polite">
+          @if (shouldShowDestinationError() && getDestinationErrorKey(); as errorKey) {
+            <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+          }
+        </div>
+      </div>
+
+      @if (placeResults().length) {
+        <ul class="plan-trip__suggestions">
+          @for (place of placeResults(); track place.displayName) {
+            <li>
+              <button type="button" (click)="selectPlace(place)">{{ place.displayName }}</button>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="pindrop-field-row plan-trip__dates">
+        <div class="pindrop-field">
+          <label class="plan-trip__label" for="startDate">Start date</label>
+          <input
+            id="startDate"
+            type="date"
+            [min]="minSelectableDate"
+            [class.plan-trip__date-input--invalid]="shouldShowDateError('startDate')"
+            [value]="formatDateValue(destinationForm().startDate)"
+            (input)="onStartDateInput($any($event.target).value)"
+            (blur)="touched.update((s) => ({ ...s, startDate: true }))"
+          />
+          <div class="pindrop-field-error-slot" aria-live="polite">
+            @if (shouldShowDateError('startDate') && getDateErrorKey('startDate'); as errorKey) {
+              <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+            }
+          </div>
+        </div>
+        <div class="pindrop-field">
+          <label class="plan-trip__label" for="endDate">End date</label>
+          <input
+            id="endDate"
+            type="date"
+            [min]="minEndSelectableDate()"
+            [class.plan-trip__date-input--invalid]="shouldShowDateError('endDate')"
+            [value]="formatDateValue(destinationForm().endDate)"
+            (input)="onEndDateInput($any($event.target).value)"
+            (blur)="touched.update((s) => ({ ...s, endDate: true }))"
+          />
+          <div class="pindrop-field-error-slot" aria-live="polite">
+            @if (shouldShowDateError('endDate') && getDateErrorKey('endDate'); as errorKey) {
+              <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+            }
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <p class="plan-trip__section-label">Popular destinations</p>
+      <div class="plan-trip__destinations">
+        @for (dest of wizardDestinations; track dest.name) {
+          <button
+            type="button"
+            class="plan-trip__destination"
+            [class.plan-trip__destination--selected]="selectedChip() === dest.name"
+            (click)="selectPopular(dest.name)"
+          >
+            <img
+              class="plan-trip__destination-image"
+              [src]="dest.imageUrl"
+              [alt]="dest.name"
+              loading="lazy"
+            />
+            <span class="plan-trip__destination-overlay"></span>
+            <span class="plan-trip__destination-text">
+              <strong>{{ dest.name }}</strong>
+              <span>
+                <i class="pi pi-map-marker" aria-hidden="true"></i>
+                {{ dest.country }}
+              </span>
+            </span>
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="plan-trip__cta"
+        [disabled]="loading()"
+        (click)="continueFromDestination()"
+      >
+        Continue
+        <i class="pi pi-angle-right" aria-hidden="true"></i>
+      </button>
+    </section>
+  }
+
+  @if (step() === 2) {
+    <section class="plan-trip__section">
+      <h1 class="plan-trip__title">Set your preferences</h1>
+      <p class="plan-trip__subtitle">Choose a budget and pace that fits your travel style</p>
+
+      <h2 class="plan-trip__group-title">Budget range</h2>
+      <div class="plan-trip__option-grid">
+        @for (opt of budgetOptions; track opt.tier) {
+          <button
+            type="button"
+            class="plan-trip__option"
+            [class.plan-trip__option--selected]="budgetTier() === opt.tier"
+            (click)="budgetTier.set(opt.tier)"
+          >
+            <strong>{{ opt.label }}</strong>
+            <span>{{ opt.range }}</span>
+          </button>
+        }
+      </div>
+
+      <h2 class="plan-trip__group-title">Travel pace</h2>
+      <div class="plan-trip__option-grid">
+        @for (opt of paceOptions; track opt.pace) {
+          <button
+            type="button"
+            class="plan-trip__option"
+            [class.plan-trip__option--selected]="pace() === opt.pace"
+            (click)="pace.set(opt.pace)"
+          >
+            <strong>{{ opt.label }}</strong>
+            <span>{{ opt.detail }}</span>
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="plan-trip__cta"
+        [disabled]="loading()"
+        (click)="continueFromPreferences()"
+      >
+        Continue
+        <i class="pi pi-angle-right" aria-hidden="true"></i>
+      </button>
+    </section>
+  }
+
+  @if (step() === 3) {
+    <section class="plan-trip__section">
+      <h1 class="plan-trip__title">What interests you?</h1>
+      <p class="plan-trip__subtitle">Select all that apply to personalize your itinerary</p>
+
+      <div class="plan-trip__interests">
+        @for (interest of interestOptions; track interest) {
+          <button
+            type="button"
+            class="plan-trip__interest"
+            [class.plan-trip__interest--selected]="interests().includes(interest)"
+            (click)="toggleInterest(interest)"
+          >
+            {{ interest }}
+          </button>
+        }
+      </div>
+
+      <div class="plan-trip__ai-note">
+        <span class="plan-trip__ai-note-icon" aria-hidden="true">
+          <i class="pi pi-sparkles"></i>
+        </span>
+        <span>
+          <strong>AI personalization</strong> — Our AI will use your selections to craft unique
+          experiences.
+        </span>
+      </div>
+
+      <button
+        type="button"
+        class="plan-trip__cta"
+        [disabled]="loading()"
+        (click)="generateProposals()"
+      >
+        <i class="pi pi-sparkles" aria-hidden="true"></i>
+        {{ loading() ? 'Generating...' : 'Generate AI proposals' }}
+      </button>
+    </section>
+  }
+</div>

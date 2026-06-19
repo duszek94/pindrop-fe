@@ -1,0 +1,38 @@
+// Shared field layout and validation message styling (auth, plan-trip, etc.)
+
+.pindrop-field {
+  position: relative;
+  display: grid;
+  gap: 0.375rem;
+  padding-bottom: 1.375rem;
+}
+
+.pindrop-field-row {
+  display: grid;
+  gap: 0.875rem 1rem;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+
+.pindrop-field-error-slot {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  min-height: 1.25rem;
+  pointer-events: none;
+}
+
+.pindrop-field-error {
+  display: block;
+  margin: 0;
+  color: var(--pindrop-danger);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .pindrop-field-row {
+    grid-template-columns: 1fr;
+  }
+}

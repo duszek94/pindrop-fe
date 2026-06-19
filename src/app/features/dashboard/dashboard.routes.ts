@@ -7,6 +7,11 @@ export const DASHBOARD_ROUTES: Routes = [
       import('./pages/dashboard-page/dashboard-page').then((m) => m.DashboardPage),
   },
   {
+    path: 'plan-trip/:tripId',
+    loadChildren: () =>
+      import('../plan-trip/plan-trip.routes').then((m) => m.PLAN_TRIP_ROUTES),
+  },
+  {
     path: 'explore',
     loadComponent: () =>
       import('./pages/dashboard-placeholder-page/dashboard-placeholder-page').then(

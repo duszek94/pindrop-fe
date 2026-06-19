@@ -1,0 +1,125 @@
+@use '../../../../../styles/auth-tokens';
+
+.trip-itinerary {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 5rem;
+}
+
+.trip-itinerary__back {
+  border: 0;
+  background: transparent;
+  color: var(--pindrop-text-muted);
+  cursor: pointer;
+}
+
+.trip-itinerary__subtitle {
+  color: var(--pindrop-text-muted);
+}
+
+.trip-itinerary__days {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0 1.5rem;
+  padding-bottom: 0.25rem;
+}
+
+.trip-itinerary__day {
+  display: grid;
+  gap: 0.125rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(42 52 65 / 80%);
+  background: var(--pindrop-surface);
+  color: var(--pindrop-text);
+  cursor: pointer;
+  white-space: nowrap;
+
+  span {
+    font-size: 0.75rem;
+    color: var(--pindrop-text-muted);
+  }
+
+  &--active {
+    border-color: var(--pindrop-primary);
+    color: var(--pindrop-primary);
+  }
+}
+
+.trip-itinerary__timeline {
+  display: grid;
+  gap: 1rem;
+}
+
+.trip-itinerary__activity {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 1rem;
+}
+
+.trip-itinerary__time {
+  font-weight: 700;
+  color: var(--pindrop-primary);
+}
+
+.trip-itinerary__body {
+  padding: 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgb(42 52 65 / 80%);
+  background: var(--pindrop-surface);
+}
+
+.trip-itinerary__type {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: rgb(52 211 153 / 14%);
+  color: var(--pindrop-primary);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+}
+
+.trip-itinerary__weather {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--pindrop-text-muted);
+}
+
+.trip-itinerary__regen {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a5b4fc;
+  cursor: pointer;
+  font-size: 0.8125rem;
+}
+
+.trip-itinerary__footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 4.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgb(5 8 16 / 92%);
+  border-top: 1px solid rgb(42 52 65 / 80%);
+}
+
+.trip-itinerary__loading,
+.trip-itinerary__error {
+  text-align: center;
+  padding: 2rem;
+}
+
+.trip-itinerary__error {
+  color: #f87171;
+}
