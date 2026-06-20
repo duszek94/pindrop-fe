@@ -1,15 +1,27 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { catchError, finalize, of, switchMap } from 'rxjs';
 
 import { PlanTripApiService } from '../../../../core/api/plan-trip-api.service';
 import type { ProposalType, TripProposal } from '../../../../core/models/plan-trip.models';
 import { PlanTripStore } from '../../services/plan-trip.store';
 
+const PROPOSAL_TYPE_LABELS: Record<ProposalType, string> = {
+  RELAXED: 'Relaxed',
+  BALANCED: 'Balanced',
+  INTENSE: 'Intense',
+};
+
+const WEATHER_ICONS: Record<string, string> = {
+  sun: 'pi-sun',
+  cloud: 'pi-cloud',
+  rain: 'pi-cloud-rain',
+  wind: 'pi-wind',
+};
+
 @Component({
   selector: 'app-trip-proposals-page',
-  imports: [ButtonModule],
+  imports: [],
   templateUrl: './trip-proposals-page.html',
   styleUrl: './trip-proposals-page.scss',
 })
@@ -68,6 +80,43 @@ export class TripProposalsPage implements OnInit {
 
   protected proposalClass(type: ProposalType): string {
     return `trip-proposals__card--${type.toLowerCase()}`;
+  }
+
+  protected proposalTypeLabel(type: ProposalType): string {
+    return PROPOSAL_TYPE_LABELS[type];
+  }
+
+  protected formatCost(usd: number): string {
+    return `$${usd.toLocaleString('en-US')}`;
+  }
+
+  protected weatherIcon(icon: string): string {
+    return WEATHER_ICONS[icon] ?? 'pi-sun';
+  }
+
+  protected pageTitle(): string {
+    const first = this.proposals()[0];
+    if (!first) {
+      return 'Your Adventure';
+    }
+
+    const city = first.title
+      .replace(/^(Relaxed|Balanced|Intense)\s+/i, '')
+      .replace(/\s+Adventure$/i, '')
+      .trim();
+
+    return city ? `Your ${city} Adventure` : 'Your Adventure';
+  }
+
+  protected tripDurationDays(): number {
+    const { startDate, endDate } = this.store.destinationForm();
+    if (startDate && endDate) {
+      const msPerDay = 86_400_000;
+      return Math.max(1, Math.round((endDate.getTime() - startDate.getTime()) / msPerDay) + 1);
+    }
+
+    const forecastLength = this.proposals()[0]?.weatherForecast.length ?? 0;
+    return forecastLength > 0 ? forecastLength : 7;
   }
 
   private loadProposals(tripId: number): void {

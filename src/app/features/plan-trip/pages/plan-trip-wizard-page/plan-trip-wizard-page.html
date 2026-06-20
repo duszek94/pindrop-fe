@@ -10,10 +10,15 @@
         <div
           class="plan-trip__progress-step"
           [class.plan-trip__progress-step--active]="step() >= wizardStep.id"
+          [class.plan-trip__progress-step--completed]="step() > wizardStep.id"
           [class.plan-trip__progress-step--current]="step() === wizardStep.id"
         >
           <span class="plan-trip__progress-dot">
-            <i [class]="'pi ' + wizardStep.icon" aria-hidden="true"></i>
+            @if (step() > wizardStep.id) {
+              <i class="pi pi-check" aria-hidden="true"></i>
+            } @else {
+              <i [class]="'pi ' + wizardStep.icon" aria-hidden="true"></i>
+            }
           </span>
           <span class="plan-trip__progress-label">{{ wizardStep.label }}</span>
         </div>
@@ -65,7 +70,32 @@
         <ul class="plan-trip__suggestions">
           @for (place of placeResults(); track place.displayName) {
             <li>
-              <button type="button" (click)="selectPlace(place)">{{ place.displayName }}</button>
+              <button type="button" (click)="selectPlace(place)">
+                @if (place.photoUrl) {
+                  <img
+                    class="plan-trip__suggestion-photo"
+                    [src]="place.photoUrl"
+                    [alt]="place.name"
+                    loading="lazy"
+                  />
+                }
+                <span class="plan-trip__suggestion-body">
+                  <span class="plan-trip__suggestion-name">{{ place.name }}</span>
+                  @if (place.region || place.country) {
+                    <span class="plan-trip__suggestion-meta">
+                      @if (place.region) {
+                        {{ place.region }}
+                      }
+                      @if (place.region && place.country) {
+                        <span aria-hidden="true"> · </span>
+                      }
+                      @if (place.country) {
+                        {{ place.country }}
+                      }
+                    </span>
+                  }
+                </span>
+              </button>
             </li>
           }
         </ul>
@@ -151,36 +181,53 @@
   @if (step() === 2) {
     <section class="plan-trip__section">
       <h1 class="plan-trip__title">Set your preferences</h1>
-      <p class="plan-trip__subtitle">Choose a budget and pace that fits your travel style</p>
+      <p class="plan-trip__subtitle">Choose your budget and travel pace</p>
 
-      <h2 class="plan-trip__group-title">Budget range</h2>
-      <div class="plan-trip__option-grid">
-        @for (opt of budgetOptions; track opt.tier) {
-          <button
-            type="button"
-            class="plan-trip__option"
-            [class.plan-trip__option--selected]="budgetTier() === opt.tier"
-            (click)="budgetTier.set(opt.tier)"
-          >
-            <strong>{{ opt.label }}</strong>
-            <span>{{ opt.range }}</span>
-          </button>
-        }
+      <div class="plan-trip__preference-section">
+        <h2 class="plan-trip__section-heading">
+          <span class="plan-trip__section-heading-icon" aria-hidden="true">
+            <i class="pi pi-dollar"></i>
+          </span>
+          Budget Range
+        </h2>
+        <div class="plan-trip__preference-grid">
+          @for (opt of budgetOptions; track opt.tier) {
+            <button
+              type="button"
+              class="plan-trip__preference-card"
+              [class.plan-trip__preference-card--selected]="budgetTier() === opt.tier"
+              (click)="budgetTier.set(opt.tier)"
+            >
+              <span class="plan-trip__preference-icon" aria-hidden="true">{{ opt.icon }}</span>
+              <strong class="plan-trip__preference-title">{{ opt.label }}</strong>
+              <span class="plan-trip__preference-desc">{{ opt.description }}</span>
+              <span class="plan-trip__preference-price">{{ opt.range }}</span>
+            </button>
+          }
+        </div>
       </div>
 
-      <h2 class="plan-trip__group-title">Travel pace</h2>
-      <div class="plan-trip__option-grid">
-        @for (opt of paceOptions; track opt.pace) {
-          <button
-            type="button"
-            class="plan-trip__option"
-            [class.plan-trip__option--selected]="pace() === opt.pace"
-            (click)="pace.set(opt.pace)"
-          >
-            <strong>{{ opt.label }}</strong>
-            <span>{{ opt.detail }}</span>
-          </button>
-        }
+      <div class="plan-trip__preference-section">
+        <h2 class="plan-trip__section-heading">
+          <span class="plan-trip__section-heading-icon" aria-hidden="true">
+            <i class="pi pi-gauge"></i>
+          </span>
+          Travel Pace
+        </h2>
+        <div class="plan-trip__preference-grid">
+          @for (opt of paceOptions; track opt.pace) {
+            <button
+              type="button"
+              class="plan-trip__preference-card"
+              [class.plan-trip__preference-card--selected]="pace() === opt.pace"
+              (click)="pace.set(opt.pace)"
+            >
+              <span class="plan-trip__preference-icon" aria-hidden="true">{{ opt.icon }}</span>
+              <strong class="plan-trip__preference-title">{{ opt.label }}</strong>
+              <span class="plan-trip__preference-desc">{{ opt.detail }}</span>
+            </button>
+          }
+        </div>
       </div>
 
       <button
@@ -201,14 +248,26 @@
       <p class="plan-trip__subtitle">Select all that apply to personalize your itinerary</p>
 
       <div class="plan-trip__interests">
-        @for (interest of interestOptions; track interest) {
+        @for (interest of interestOptions; track interest.label) {
           <button
             type="button"
             class="plan-trip__interest"
-            [class.plan-trip__interest--selected]="interests().includes(interest)"
-            (click)="toggleInterest(interest)"
+            [class.plan-trip__interest--selected]="interests().includes(interest.label)"
+            (click)="toggleInterest(interest.label)"
           >
-            {{ interest }}
+            <span
+              class="plan-trip__interest-check"
+              [class.plan-trip__interest-check--checked]="interests().includes(interest.label)"
+              aria-hidden="true"
+            >
+              @if (interests().includes(interest.label)) {
+                <i class="pi pi-check"></i>
+              }
+            </span>
+            <span class="plan-trip__interest-icon" aria-hidden="true">
+              <i [class]="'pi ' + interest.icon"></i>
+            </span>
+            <span class="plan-trip__interest-label">{{ interest.label }}</span>
           </button>
         }
       </div>
@@ -230,7 +289,7 @@
         (click)="generateProposals()"
       >
         <i class="pi pi-sparkles" aria-hidden="true"></i>
-        {{ loading() ? 'Generating...' : 'Generate AI proposals' }}
+        {{ loading() ? 'Generating...' : 'Generate AI Proposals' }}
       </button>
     </section>
   }

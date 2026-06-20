@@ -1,50 +1,95 @@
 <div class="trip-proposals">
-  <header class="trip-proposals__header">
-    <button type="button" class="trip-proposals__back" (click)="back()">
-      <i class="pi pi-angle-left" aria-hidden="true"></i>
-      Back
-    </button>
-    <p class="trip-proposals__badge"><i class="pi pi-sparkles" aria-hidden="true"></i> AI Proposals</p>
-    <h1>Your Adventure</h1>
-    <p class="trip-proposals__subtitle">We've crafted {{ proposals().length }} unique itineraries for you</p>
+  <button type="button" class="trip-proposals__back" (click)="back()">
+    <i class="pi pi-angle-left" aria-hidden="true"></i>
+    Back
+  </button>
+
+  <header class="trip-proposals__hero">
+    <p class="trip-proposals__badge">
+      <span class="trip-proposals__badge-icon" aria-hidden="true">
+        <i class="pi pi-sparkles"></i>
+      </span>
+      AI Proposals
+    </p>
+    <h1>{{ pageTitle() }}</h1>
+    <p class="trip-proposals__subtitle">
+      We've crafted {{ proposals().length }} unique itineraries for you
+    </p>
   </header>
 
   @if (error()) {
-    <p class="trip-proposals__error">{{ error() }}</p>
+    <p class="trip-proposals__error" role="alert">{{ error() }}</p>
   }
 
   <div class="trip-proposals__grid">
     @for (proposal of proposals(); track proposal.id) {
       <article
-        class="trip-proposals__card"
-        [class]="proposalClass(proposal.type)"
+        class="trip-proposals__card {{ proposalClass(proposal.type) }}"
         [class.trip-proposals__card--selected]="selectedType() === proposal.type"
         (click)="selectProposal(proposal)"
       >
-        @if (proposal.recommended) {
-          <span class="trip-proposals__recommended">Recommended</span>
-        }
-        @if (selectedType() === proposal.type) {
-          <span class="trip-proposals__check"><i class="pi pi-check" aria-hidden="true"></i></span>
-        }
-        <h2>{{ proposal.title }}</h2>
-        <p>{{ proposal.summary }}</p>
-        <p class="trip-proposals__meta">${{ proposal.estimatedCostUsd }} · AI</p>
-        <ul class="trip-proposals__highlights">
-          @for (item of proposal.highlights; track item) {
-            <li>{{ item }}</li>
-          }
-        </ul>
-        <div class="trip-proposals__weather">
-          @for (day of proposal.weatherForecast; track day.dayLabel) {
-            <span>{{ day.dayLabel }} {{ day.tempC }}°</span>
-          }
+        <div class="trip-proposals__card-header">
+          <div class="trip-proposals__card-header-top">
+            @if (selectedType() === proposal.type) {
+              <span class="trip-proposals__check" aria-hidden="true">
+                <i class="pi pi-check"></i>
+              </span>
+            } @else {
+              <span class="trip-proposals__check-spacer" aria-hidden="true"></span>
+            }
+
+            @if (proposal.recommended) {
+              <span class="trip-proposals__recommended">
+                <i class="pi pi-sparkles" aria-hidden="true"></i>
+                Recommended
+              </span>
+            }
+          </div>
+
+          <h2 class="trip-proposals__card-title">{{ proposalTypeLabel(proposal.type) }}</h2>
+          <p class="trip-proposals__card-summary">{{ proposal.summary }}</p>
+        </div>
+
+        <div class="trip-proposals__card-body">
+          <div class="trip-proposals__stats">
+            <span class="trip-proposals__duration">{{ tripDurationDays() }} days</span>
+            <span class="trip-proposals__stats-price">{{ formatCost(proposal.estimatedCostUsd) }}</span>
+            <span class="trip-proposals__ai-badge">AI</span>
+          </div>
+
+          <div class="trip-proposals__section">
+            <p class="trip-proposals__section-label">Weather forecast</p>
+            <div class="trip-proposals__weather">
+              @for (day of proposal.weatherForecast; track day.dayLabel) {
+                <div class="trip-proposals__weather-day">
+                  <span class="trip-proposals__weather-label">{{ day.dayLabel }}</span>
+                  <i [class]="'pi ' + weatherIcon(day.icon)" aria-hidden="true"></i>
+                  <span class="trip-proposals__weather-temp">{{ day.tempC }}°</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="trip-proposals__section">
+            <p class="trip-proposals__section-label">Highlights</p>
+            <ul class="trip-proposals__highlights">
+              @for (item of proposal.highlights; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
         </div>
       </article>
     }
   </div>
 
-  <button pButton type="button" class="trip-proposals__cta" [disabled]="loading()" (click)="viewItinerary()">
-    View Full Itinerary <i class="pi pi-angle-right" aria-hidden="true"></i>
+  <button
+    type="button"
+    class="trip-proposals__cta"
+    [disabled]="loading()"
+    (click)="viewItinerary()"
+  >
+    View Full Itinerary
+    <i class="pi pi-angle-right" aria-hidden="true"></i>
   </button>
 </div>

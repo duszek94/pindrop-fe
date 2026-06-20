@@ -5,8 +5,11 @@ export type ActivityType = 'ACTIVITY' | 'FOOD' | 'TRANSPORT' | 'ACCOMMODATION';
 
 export interface PlaceResult {
   name: string;
+  region: string | null;
   country: string;
+  countryCode: string | null;
   displayName: string;
+  photoUrl: string | null;
   lat: number;
   lng: number;
 }
@@ -63,25 +66,59 @@ export interface WizardDestinationForm {
   endDate: Date | null;
 }
 
-export const INTEREST_OPTIONS = [
-  'Child-friendly',
-  'Restaurants',
-  'Nature',
-  'Photography spots',
-  'Adventure',
-  'Culture & History',
-  'Nightlife',
-  'Beaches',
-] as const;
+export type InterestOption = {
+  label: string;
+  icon: string;
+};
 
-export const BUDGET_OPTIONS: Array<{ tier: BudgetTier; label: string; range: string }> = [
-  { tier: 'ECO', label: 'Eco', range: '$50-100/day' },
-  { tier: 'MID_RANGE', label: 'Mid-Range', range: '$100-250/day' },
-  { tier: 'PREMIUM', label: 'Premium', range: '$250+/day' },
+export const INTEREST_OPTIONS: InterestOption[] = [
+  { label: 'Child-friendly', icon: 'pi-users' },
+  { label: 'Restaurants', icon: 'pi-shop' },
+  { label: 'Nature', icon: 'pi-sun' },
+  { label: 'Photography spots', icon: 'pi-camera' },
+  { label: 'Adventure', icon: 'pi-compass' },
+  { label: 'Culture & History', icon: 'pi-building' },
+  { label: 'Nightlife', icon: 'pi-moon' },
+  { label: 'Beaches', icon: 'pi-globe' },
 ];
 
-export const PACE_OPTIONS: Array<{ pace: TravelPace; label: string; detail: string }> = [
-  { pace: 'RELAXED', label: 'Relaxed', detail: '2-3 activities per day' },
-  { pace: 'BALANCED', label: 'Balanced', detail: '4-5 activities per day' },
-  { pace: 'ACTIVE', label: 'Active', detail: '6+ activities per day' },
+export const BUDGET_OPTIONS: Array<{
+  tier: BudgetTier;
+  label: string;
+  description: string;
+  range: string;
+  icon: string;
+}> = [
+  {
+    tier: 'ECO',
+    label: 'Eco',
+    description: 'Budget-friendly travel',
+    range: '$50-100/day',
+    icon: '💰',
+  },
+  {
+    tier: 'MID_RANGE',
+    label: 'Mid-Range',
+    description: 'Comfortable & balanced',
+    range: '$100-250/day',
+    icon: '💎',
+  },
+  {
+    tier: 'PREMIUM',
+    label: 'Premium',
+    description: 'Luxury experiences',
+    range: '$250+/day',
+    icon: '👑',
+  },
+];
+
+export const PACE_OPTIONS: Array<{
+  pace: TravelPace;
+  label: string;
+  detail: string;
+  icon: string;
+}> = [
+  { pace: 'RELAXED', label: 'Relaxed', detail: '2-3 activities per day', icon: '🧘' },
+  { pace: 'BALANCED', label: 'Balanced', detail: '4-5 activities per day', icon: '⚖️' },
+  { pace: 'ACTIVE', label: 'Active', detail: '6+ activities per day', icon: '🏃' },
 ];
