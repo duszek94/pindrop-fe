@@ -1,13 +1,13 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 import type {
-  BudgetTier,
+  PreferenceProfile,
   ProposalType,
-  TravelPace,
   TripItinerary,
   TripProposal,
   WizardDestinationForm,
 } from '../../../core/models/plan-trip.models';
+import { createDefaultPreferenceProfile } from '../../../core/models/plan-trip.models';
 
 @Injectable({ providedIn: 'root' })
 export class PlanTripStore {
@@ -20,8 +20,7 @@ export class PlanTripStore {
     startDate: null,
     endDate: null,
   });
-  readonly budgetTier = signal<BudgetTier | null>(null);
-  readonly pace = signal<TravelPace | null>(null);
+  readonly preferenceProfile = signal<PreferenceProfile>(createDefaultPreferenceProfile());
   readonly interests = signal<string[]>([]);
   readonly proposals = signal<TripProposal[]>([]);
   readonly selectedProposalType = signal<ProposalType>('BALANCED');
@@ -34,8 +33,7 @@ export class PlanTripStore {
     this.tripId.set(null);
     this.wizardStep.set(1);
     this.destinationForm.set({ destination: '', lat: 0, lng: 0, startDate: null, endDate: null });
-    this.budgetTier.set(null);
-    this.pace.set(null);
+    this.preferenceProfile.set(createDefaultPreferenceProfile());
     this.interests.set([]);
     this.proposals.set([]);
     this.selectedProposalType.set('BALANCED');

@@ -4,10 +4,9 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import type {
-  BudgetTier,
   PlaceResult,
+  PreferenceProfile,
   ProposalType,
-  TravelPace,
   TripItinerary,
   TripProposal,
 } from '../models/plan-trip.models';
@@ -20,6 +19,18 @@ export class PlanTripApiService {
   searchPlaces(query: string): Observable<PlaceResult[]> {
     return this.http.get<PlaceResult[]>(`${this.baseUrl}/places/search`, {
       params: { q: query, limit: '8' },
+    });
+  }
+
+  reversePlace(lat: number, lng: number): Observable<PlaceResult> {
+    return this.http.get<PlaceResult>(`${this.baseUrl}/places/reverse`, {
+      params: { lat: String(lat), lng: String(lng) },
+    });
+  }
+
+  getPopularDestinations(limit = 6): Observable<PlaceResult[]> {
+    return this.http.get<PlaceResult[]>(`${this.baseUrl}/places/popular`, {
+      params: { limit: String(limit) },
     });
   }
 
@@ -36,7 +47,7 @@ export class PlanTripApiService {
     return this.http.patch<void>(`${this.baseUrl}/trips/${tripId}/wizard/destination`, body);
   }
 
-  updatePreferences(tripId: number, body: { budgetTier: BudgetTier; pace: TravelPace }): Observable<void> {
+  updatePreferences(tripId: number, body: { preferenceProfile: PreferenceProfile }): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/trips/${tripId}/wizard/preferences`, body);
   }
 

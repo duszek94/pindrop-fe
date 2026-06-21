@@ -1,0 +1,151 @@
+@use '../../../../../styles/auth-tokens';
+
+.destination-map-picker__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(5 8 22 / 72%);
+  backdrop-filter: blur(4px);
+}
+
+.destination-map-picker__panel {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 42rem);
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgb(30 41 59 / 90%);
+  background: var(--pindrop-surface);
+  box-shadow: 0 24px 48px rgb(0 0 0 / 35%);
+}
+
+.destination-map-picker__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: var(--pindrop-text-muted);
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+}
+
+.destination-map-picker__close {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+  color: var(--pindrop-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--pindrop-text);
+  }
+}
+
+.destination-map-picker__map {
+  height: min(52vh, 24rem);
+  border-radius: 0.875rem;
+  overflow: hidden;
+  border: 1px solid rgb(30 41 59 / 90%);
+}
+
+.destination-map-picker__coords {
+  margin: 0;
+  color: var(--pindrop-text-muted);
+  font-size: 0.8125rem;
+}
+
+:host ::ng-deep {
+  .destination-map-picker__pin {
+    background: transparent !important;
+    border: 0 !important;
+  }
+
+  .destination-map-picker__pin-dot {
+    display: block;
+    width: 1.375rem;
+    height: 1.375rem;
+    border-radius: 999px;
+    border: 3px solid #fff;
+    background: var(--pindrop-primary);
+    box-shadow:
+      0 0 0 4px rgb(16 185 129 / 22%),
+      0 2px 12px rgb(16 185 129 / 55%);
+    cursor: grab;
+  }
+
+  .leaflet-marker-dragging .destination-map-picker__pin-dot {
+    cursor: grabbing;
+    transform: scale(1.08);
+  }
+}
+
+.destination-map-picker__error {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(248 113 113 / 25%);
+  background: rgb(248 113 113 / 8%);
+  color: var(--pindrop-danger);
+  font-size: 0.875rem;
+}
+
+.destination-map-picker__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+.destination-map-picker__secondary,
+.destination-map-picker__primary {
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.destination-map-picker__secondary {
+  border: 1px solid rgb(30 41 59 / 90%);
+  background: transparent;
+  color: var(--pindrop-text-muted);
+
+  &:hover {
+    color: var(--pindrop-text);
+  }
+}
+
+.destination-map-picker__primary {
+  border: 0;
+  background: var(--pindrop-primary);
+  color: var(--pindrop-primary-text);
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+:host ::ng-deep .leaflet-control-zoom a {
+  color: var(--pindrop-text);
+  background: var(--pindrop-surface-elevated);
+  border-color: rgb(30 41 59 / 90%);
+}

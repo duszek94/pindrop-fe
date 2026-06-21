@@ -269,10 +269,16 @@
   font-size: 0.6875rem;
   color: var(--pindrop-text-muted);
 
-  i {
+  i,
+  .trip-proposals__weather-svg {
     font-size: 0.9375rem;
     color: rgb(226 232 240 / 85%);
   }
+}
+
+.trip-proposals__weather-svg {
+  width: 0.9375rem;
+  height: 0.9375rem;
 }
 
 .trip-proposals__weather-label {
@@ -297,6 +303,55 @@
   li + li {
     margin-top: 0.375rem;
   }
+}
+
+.trip-proposals__cost-section {
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 3%);
+}
+
+.trip-proposals__cost-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+  color: var(--pindrop-text-muted);
+
+  li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  span:last-child {
+    color: var(--pindrop-text);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+.trip-proposals__cost-sub {
+  padding-left: 0.75rem;
+  font-size: 0.75rem;
+
+  span:first-child {
+    color: rgb(148 163 184 / 72%);
+  }
+
+  span:last-child {
+    font-weight: 500;
+  }
+}
+
+.trip-proposals__cost-disclaimer {
+  margin: 0.75rem 0 0;
+  color: rgb(148 163 184 / 72%);
+  font-size: 0.6875rem;
+  line-height: 1.45;
 }
 
 .trip-proposals__cta {

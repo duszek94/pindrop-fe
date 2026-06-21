@@ -1,0 +1,42 @@
+<div
+  class="destination-map-picker__backdrop"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="destination-map-picker-title"
+  (click)="onBackdropClick($event)"
+  (keydown.escape)="close()"
+>
+  <div class="destination-map-picker__panel">
+    <header class="destination-map-picker__header">
+      <div>
+        <h2 id="destination-map-picker-title">Find on map</h2>
+        <p>Click the map or drag the pin to choose your destination.</p>
+      </div>
+      <button type="button" class="destination-map-picker__close" (click)="close()" aria-label="Close">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div #mapHost class="destination-map-picker__map" aria-label="Destination map"></div>
+
+    @if (pinLabel()) {
+      <p class="destination-map-picker__coords">Selected pin: {{ pinLabel() }}</p>
+    }
+
+    @if (error()) {
+      <p class="destination-map-picker__error" role="alert">{{ error() }}</p>
+    }
+
+    <footer class="destination-map-picker__footer">
+      <button type="button" class="destination-map-picker__secondary" (click)="close()">Cancel</button>
+      <button
+        type="button"
+        class="destination-map-picker__primary"
+        [disabled]="loading()"
+        (click)="confirmSelection()"
+      >
+        {{ loading() ? 'Confirming...' : 'Use this location' }}
+      </button>
+    </footer>
+  </div>
+</div>

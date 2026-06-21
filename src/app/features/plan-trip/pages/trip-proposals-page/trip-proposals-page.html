@@ -53,9 +53,64 @@
         <div class="trip-proposals__card-body">
           <div class="trip-proposals__stats">
             <span class="trip-proposals__duration">{{ tripDurationDays() }} days</span>
-            <span class="trip-proposals__stats-price">{{ formatCost(proposal.estimatedCostUsd) }}</span>
+            @if (hasCostBreakdown(proposal)) {
+              <span class="trip-proposals__stats-price">{{ formatTotalRange(proposal.costBreakdown!) }}</span>
+            } @else {
+              <span class="trip-proposals__stats-price">{{ formatCost(proposal.estimatedCostUsd) }}</span>
+            }
             <span class="trip-proposals__ai-badge">AI</span>
           </div>
+
+          @if (hasCostBreakdown(proposal)) {
+            <div class="trip-proposals__section trip-proposals__cost-section">
+              <p class="trip-proposals__section-label">{{ 'planTrip.proposals.costBreakdown' | translate }}</p>
+              <ul class="trip-proposals__cost-lines">
+                <li>
+                  <span>{{ 'planTrip.proposals.breakdown.accommodation' | translate }}</span>
+                  <span>{{ formatCostRange(proposal.costBreakdown!.breakdown.accommodation, proposal.costBreakdown!.estimatedTotal.currency) }}</span>
+                </li>
+                <li>
+                  <span>{{ 'planTrip.proposals.breakdown.food' | translate }}</span>
+                  <span>{{ formatCostRange(proposal.costBreakdown!.breakdown.food, proposal.costBreakdown!.estimatedTotal.currency) }}</span>
+                </li>
+                <li>
+                  <span>{{ 'planTrip.proposals.breakdown.attractions' | translate }}</span>
+                  <span>{{ formatCostRange(proposal.costBreakdown!.breakdown.attractions, proposal.costBreakdown!.estimatedTotal.currency) }}</span>
+                </li>
+                <li>
+                  <span>{{ 'planTrip.proposals.breakdown.transport' | translate }}</span>
+                  <span>{{ formatCostRange(proposal.costBreakdown!.breakdown.transport, proposal.costBreakdown!.estimatedTotal.currency) }}</span>
+                </li>
+                @if (showTransportSubCosts(proposal.costBreakdown!.breakdown.transport)) {
+                  @if (hasSubCost(proposal.costBreakdown!.breakdown.transport.sub?.publicTransit)) {
+                    <li class="trip-proposals__cost-sub">
+                      <span>{{ 'planTrip.proposals.breakdown.publicTransit' | translate }}</span>
+                      <span>{{ formatCostRange(proposal.costBreakdown!.breakdown.transport.sub!.publicTransit!, proposal.costBreakdown!.estimatedTotal.currency) }}</span>
+                    </li>
+                  }
+                  @if (hasSubCost(proposal.costBreakdown!.breakdown.transport.sub?.carRental)) {
+                    <li class="trip-proposals__cost-sub">
+                      <span>{{ 'planTrip.proposals.breakdown.carRental' | translate }}</span>
+                      <span>{{ formatCostRange(proposal.costBreakdown!.breakdown.transport.sub!.carRental!, proposal.costBreakdown!.estimatedTotal.currency) }}</span>
+                    </li>
+                  }
+                  @if (hasSubCost(proposal.costBreakdown!.breakdown.transport.sub?.fuel)) {
+                    <li class="trip-proposals__cost-sub">
+                      <span>{{ 'planTrip.proposals.breakdown.fuel' | translate }}</span>
+                      <span>{{ formatCostRange(proposal.costBreakdown!.breakdown.transport.sub!.fuel!, proposal.costBreakdown!.estimatedTotal.currency) }}</span>
+                    </li>
+                  }
+                  @if (hasSubCost(proposal.costBreakdown!.breakdown.transport.sub?.parking)) {
+                    <li class="trip-proposals__cost-sub">
+                      <span>{{ 'planTrip.proposals.breakdown.parking' | translate }}</span>
+                      <span>{{ formatCostRange(proposal.costBreakdown!.breakdown.transport.sub!.parking!, proposal.costBreakdown!.estimatedTotal.currency) }}</span>
+                    </li>
+                  }
+                }
+              </ul>
+              <p class="trip-proposals__cost-disclaimer">{{ 'planTrip.proposals.costDisclaimer' | translate }}</p>
+            </div>
+          }
 
           <div class="trip-proposals__section">
             <p class="trip-proposals__section-label">Weather forecast</p>
@@ -63,7 +118,49 @@
               @for (day of proposal.weatherForecast; track day.dayLabel) {
                 <div class="trip-proposals__weather-day">
                   <span class="trip-proposals__weather-label">{{ day.dayLabel }}</span>
-                  <i [class]="'pi ' + weatherIcon(day.icon)" aria-hidden="true"></i>
+                  @switch (weatherIconKind(day.icon)) {
+                    @case ('rain') {
+                      <svg
+                        class="trip-proposals__weather-svg"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.75"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M6.5 14a3.5 3.5 0 1 1 .4-6.8A4.5 4.5 0 0 1 18.5 9a2.75 2.75 0 0 1 .3 5"
+                        />
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.75"
+                          stroke-linecap="round"
+                          d="M8 17.5v2.5M12 16.5v3.5M16 17.5v2.5"
+                        />
+                      </svg>
+                    }
+                    @case ('wind') {
+                      <svg
+                        class="trip-proposals__weather-svg"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.75"
+                          stroke-linecap="round"
+                          d="M4 8h11a2.5 2.5 0 1 0-2-4M4 12h14a2.5 2.5 0 1 1 2 4M4 16h9a2 2 0 1 1-1.5 3.5"
+                        />
+                      </svg>
+                    }
+                    @default {
+                      <i [class]="'pi ' + weatherIcon(day.icon)" aria-hidden="true"></i>
+                    }
+                  }
                   <span class="trip-proposals__weather-temp">{{ day.tempC }}°</span>
                 </div>
               }

@@ -1,10 +1,16 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 
-const STORAGE_KEY = 'pindrop.lang';
+export const LANGUAGE_STORAGE_KEY = 'pindrop.lang';
 
 export const SUPPORTED_LANGUAGES = ['en', 'pl'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+
+export function readStoredLanguage(): SupportedLanguage {
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as SupportedLanguage | null;
+  return saved && SUPPORTED_LANGUAGES.includes(saved) ? saved : 'en';
+}
 
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
@@ -12,20 +18,20 @@ export class LanguageService {
 
   readonly currentLang = signal<SupportedLanguage>('en');
 
-  init(): void {
+  init(): Promise<void> {
     this.translate.addLangs([...SUPPORTED_LANGUAGES]);
+    const initialLang = readStoredLanguage();
 
-    const saved = localStorage.getItem(STORAGE_KEY) as SupportedLanguage | null;
-    const initialLang =
-      saved && SUPPORTED_LANGUAGES.includes(saved) ? saved : 'en';
-
-    this.setLanguage(initialLang);
+    return firstValueFrom(this.translate.use(initialLang)).then(() => {
+      this.currentLang.set(initialLang);
+      document.documentElement.lang = initialLang;
+    });
   }
 
   setLanguage(lang: SupportedLanguage): void {
-    this.translate.use(lang);
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
     this.currentLang.set(lang);
-    localStorage.setItem(STORAGE_KEY, lang);
     document.documentElement.lang = lang;
+    void firstValueFrom(this.translate.use(lang));
   }
 }

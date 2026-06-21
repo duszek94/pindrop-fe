@@ -17,6 +17,7 @@ import { providePrimeNG } from 'primeng/config';
 
 import { authInterceptor, errorInterceptor } from './core/auth/auth.interceptor';
 import { LanguageService } from './core/i18n/language.service';
+import { languageInterceptor } from './core/i18n/language.interceptor';
 import { routes } from './app.routes';
 
 const PindropPreset = definePreset(Aura, {
@@ -60,18 +61,17 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+    provideHttpClient(withInterceptors([languageInterceptor, authInterceptor, errorInterceptor])),
     provideTranslateService({
       loader: provideTranslateHttpLoader({
         prefix: '/assets/i18n/',
         suffix: '.json',
+        useHttpBackend: true,
       }),
       fallbackLang: 'en',
       lang: 'en',
     }),
-    provideAppInitializer(() => {
-      inject(LanguageService).init();
-    }),
+    provideAppInitializer(() => inject(LanguageService).init()),
     providePrimeNG({
       theme: {
         preset: PindropPreset,

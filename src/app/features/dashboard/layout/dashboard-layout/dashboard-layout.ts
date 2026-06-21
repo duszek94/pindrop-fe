@@ -1,5 +1,7 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map, startWith } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -17,8 +19,17 @@ import { DashboardStore } from '../../services/dashboard.store';
 export class DashboardLayout implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly dashboardStore = inject(DashboardStore);
+  private readonly router = inject(Router);
 
   protected readonly navItems = DASHBOARD_NAV_ITEMS;
+  protected readonly flushMain = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map(() => this.isPlanTripUrl(this.router.url)),
+      startWith(this.isPlanTripUrl(this.router.url)),
+    ),
+    { initialValue: this.isPlanTripUrl(this.router.url) },
+  );
   protected readonly unreadCount = this.dashboardStore.unreadCount;
   protected readonly avatarUser = computed<AvatarUser | null>(() => {
     const me = this.dashboardStore.me();
@@ -42,5 +53,9 @@ export class DashboardLayout implements OnInit {
 
   protected logout(): void {
     this.authService.logout();
+  }
+
+  private isPlanTripUrl(url: string): boolean {
+    return /\/plan-trip(?:\/|$)/.test(url);
   }
 }

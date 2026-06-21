@@ -126,6 +126,98 @@
   "common": {
     "language": "Language"
   },
+  "planTrip": {
+    "preferences": {
+      "title": "Set your preferences",
+      "subtitle": "Tell us how you like to travel so we can personalize your trip",
+      "budget": {
+        "heading": "Overall budget style",
+        "eco": {
+          "label": "Budget-conscious",
+          "description": "Hostels, street food, free sights, public transit"
+        },
+        "midRange": {
+          "label": "Balanced",
+          "description": "Mid-range stays, mix of paid and free experiences"
+        },
+        "premium": {
+          "label": "Splurge-friendly",
+          "description": "Premium stays, fine dining, standout experiences"
+        }
+      },
+      "priorities": {
+        "heading": "Where to spend",
+        "hint": "Choose Save, Balanced, or Invest for each category",
+        "save": "Save",
+        "balanced": "Balanced",
+        "invest": "Invest"
+      },
+      "categories": {
+        "accommodation": "Accommodation",
+        "food": "Food",
+        "attractions": "Attractions",
+        "transport": "Transport"
+      },
+      "transport": {
+        "heading": "Getting around",
+        "hint": "Select at least one way you prefer to travel",
+        "avoidFlying": "Avoid flying when train is reasonable",
+        "carHint": "Fuel, parking, and tolls will be included in transport estimates when you drive or rent a car.",
+        "modes": {
+          "public_transit": "Public transit",
+          "trains": "Trains",
+          "flights": "Flights",
+          "own_car": "Own car",
+          "budget_car_rental": "Budget car rental",
+          "premium_car_rental": "Premium car rental",
+          "walk_cycle": "Walking & cycling"
+        }
+      },
+      "pace": {
+        "heading": "Travel pace",
+        "relaxed": {
+          "label": "Relaxed",
+          "detail": "Slow days, long meals, beach clubs, spa, nightlife"
+        },
+        "balanced": {
+          "label": "Balanced",
+          "detail": "Museums, scenic walks, one highlight per day, wellness"
+        },
+        "active": {
+          "label": "Active",
+          "detail": "Hiking, long walks, adventure sports, outdoors"
+        },
+        "intensity": {
+          "heading": "Trail difficulty",
+          "easy": "Easy trails",
+          "moderate": "Moderate",
+          "ambitious": "Ambitious (6–10h days)"
+        }
+      },
+      "optional": "Optional",
+      "requirements": {
+        "toggle": "Add special requirements",
+        "heading": "Anything else we should know?",
+        "collapse": "Hide",
+        "placeholder": "e.g. wheelchair-accessible routes, must visit Auschwitz, no early mornings, traveling with a dog"
+      }
+    },
+    "proposals": {
+      "costBreakdown": "Estimated costs",
+      "costDisclaimer": "AI-generated estimates — not verified prices. Actual costs may vary.",
+      "totalRange": "{{min}}–{{max}} {{currency}}",
+      "breakdown": {
+        "accommodation": "Accommodation",
+        "food": "Food",
+        "attractions": "Attractions",
+        "transport": "Transport",
+        "publicTransit": "Public transit",
+        "fuel": "Fuel",
+        "parking": "Parking",
+        "carRental": "Car rental"
+      }
+    }
+  },
   "validation": {
     "generic": "Please check this field.",
     "firstName": {
@@ -149,7 +241,7 @@
     "planTrip": {
       "destination": {
         "required": "Destination is required.",
-        "pickFromList": "Select a destination from the suggestions or popular list."
+        "pickFromList": "Select a destination from the suggestions, popular list, or map."
       },
       "startDate": {
         "required": "Start date is required.",
@@ -159,6 +251,12 @@
         "required": "End date is required.",
         "past": "End date cannot be in the past.",
         "beforeStart": "End date must be on or after the start date."
+      },
+      "preferences": {
+        "budgetRequired": "Please select a budget style.",
+        "paceRequired": "Please select a travel pace.",
+        "transportRequired": "Please select at least one transport mode.",
+        "categoryRequired": "Please set a spending priority for each category."
       }
     }
   }

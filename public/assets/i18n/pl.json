@@ -126,6 +126,98 @@
   "common": {
     "language": "Język"
   },
+  "planTrip": {
+    "preferences": {
+      "title": "Ustaw preferencje",
+      "subtitle": "Powiedz nam, jak lubisz podróżować, aby spersonalizować wyjazd",
+      "budget": {
+        "heading": "Ogólny styl budżetu",
+        "eco": {
+          "label": "Oszczędnie",
+          "description": "Hostele, street food, darmowe atrakcje, transport publiczny"
+        },
+        "midRange": {
+          "label": "Zbalansowany",
+          "description": "Noclegi średniej klasy, mix płatnych i darmowych atrakcji"
+        },
+        "premium": {
+          "label": "Bez ograniczeń",
+          "description": "Luksusowe noclegi, fine dining, wyjątkowe doświadczenia"
+        }
+      },
+      "priorities": {
+        "heading": "Na co wydać",
+        "hint": "Wybierz Oszczędzaj, Zbalansuj lub Inwestuj dla każdej kategorii",
+        "save": "Oszczędzaj",
+        "balanced": "Zbalansuj",
+        "invest": "Inwestuj"
+      },
+      "categories": {
+        "accommodation": "Noclegi",
+        "food": "Jedzenie",
+        "attractions": "Atrakcje",
+        "transport": "Transport"
+      },
+      "transport": {
+        "heading": "Jak się poruszać",
+        "hint": "Wybierz co najmniej jeden preferowany sposób podróży",
+        "avoidFlying": "Unikaj lotów, gdy pociąg ma sens",
+        "carHint": "Paliwo, parking i opłaty drogowe będą uwzględnione w szacunkach transportu, gdy jedziesz własnym autem lub wynajmujesz samochód.",
+        "modes": {
+          "public_transit": "Transport publiczny",
+          "trains": "Pociągi",
+          "flights": "Loty",
+          "own_car": "Własny samochód",
+          "budget_car_rental": "Tani wynajem auta",
+          "premium_car_rental": "Premium wynajem auta",
+          "walk_cycle": "Spacer i rower"
+        }
+      },
+      "pace": {
+        "heading": "Tempo podróży",
+        "relaxed": {
+          "label": "Spokojne",
+          "detail": "Wolne dni, długie posiłki, plaża, spa, nocne życie"
+        },
+        "balanced": {
+          "label": "Zbalansowane",
+          "detail": "Muzea, spacery, jeden highlight dziennie, wellness"
+        },
+        "active": {
+          "label": "Aktywne",
+          "detail": "Wędrówki, długie spacery, sport, aktywność na świeżym powietrzu"
+        },
+        "intensity": {
+          "heading": "Trudność tras",
+          "easy": "Łatwe szlaki",
+          "moderate": "Umiarkowane",
+          "ambitious": "Ambitne (6–10 h dziennie)"
+        }
+      },
+      "optional": "Opcjonalnie",
+      "requirements": {
+        "toggle": "Dodaj specjalne wymagania",
+        "heading": "Czy jest coś jeszcze, o czym powinniśmy wiedzieć?",
+        "collapse": "Ukryj",
+        "placeholder": "np. trasy dostępne dla wózków, obowiązkowa wizyta w Auschwitz, bez wczesnych poranków, podróż z psem"
+      }
+    },
+    "proposals": {
+      "costBreakdown": "Szacunkowe koszty",
+      "costDisclaimer": "Estymaty AI — niezweryfikowane ceny. Rzeczywiste koszty mogą się różnić.",
+      "totalRange": "{{min}}–{{max}} {{currency}}",
+      "breakdown": {
+        "accommodation": "Noclegi",
+        "food": "Jedzenie",
+        "attractions": "Atrakcje",
+        "transport": "Transport",
+        "publicTransit": "Transport publiczny",
+        "fuel": "Paliwo",
+        "parking": "Parking",
+        "carRental": "Wynajem auta"
+      }
+    }
+  },
   "validation": {
     "generic": "Sprawdź to pole.",
     "firstName": {
@@ -149,7 +241,7 @@
     "planTrip": {
       "destination": {
         "required": "Destynacja jest wymagana.",
-        "pickFromList": "Wybierz destynację z listy podpowiedzi lub popularnych miejsc."
+        "pickFromList": "Wybierz destynację z podpowiedzi, popularnych miejsc lub mapy."
       },
       "startDate": {
         "required": "Data rozpoczęcia jest wymagana.",
@@ -159,6 +251,12 @@
         "required": "Data zakończenia jest wymagana.",
         "past": "Data zakończenia nie może być w przeszłości.",
         "beforeStart": "Data zakończenia musi być taka sama lub późniejsza niż data rozpoczęcia."
+      },
+      "preferences": {
+        "budgetRequired": "Wybierz styl budżetu.",
+        "paceRequired": "Wybierz tempo podróży.",
+        "transportRequired": "Wybierz co najmniej jeden sposób transportu.",
+        "categoryRequired": "Ustaw priorytet wydatków dla każdej kategorii."
       }
     }
   }

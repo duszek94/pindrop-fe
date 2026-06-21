@@ -109,6 +109,12 @@
   padding: 1rem 1rem 6.5rem;
 }
 
+.dashboard-main--flush {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
 .dashboard-bottom-nav {
   position: fixed;
   inset-inline: 0;
@@ -153,7 +159,7 @@
 }
 
 @media (min-width: 768px) {
-  .dashboard-main {
+  .dashboard-main:not(.dashboard-main--flush) {
     padding: 1.5rem 1.5rem 2rem;
   }
 
@@ -167,7 +173,7 @@
     display: none;
   }
 
-  .dashboard-main {
+  .dashboard-main:not(.dashboard-main--flush) {
     padding-bottom: 2rem;
   }
 }
