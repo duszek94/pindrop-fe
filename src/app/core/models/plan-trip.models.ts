@@ -232,6 +232,8 @@ export interface WizardDestinationForm {
 
   destination: string;
 
+  placeType: string | null;
+
   lat: number;
 
   lng: number;
@@ -244,13 +246,21 @@ export interface WizardDestinationForm {
 
 
 
-export type InterestOption = {
+export interface InterestSuggestion {
 
-  label: string;
+  id: string;
+
+  labelKey: string;
 
   icon: string;
 
-};
+  recommended: boolean;
+
+}
+
+
+
+export type InterestOption = InterestSuggestion;
 
 
 
@@ -293,10 +303,6 @@ export const TRANSPORT_MODES: TransportMode[] = [
 
 
 export const CAR_TRANSPORT_MODES: TransportMode[] = ['OWN_CAR', 'BUDGET_CAR_RENTAL', 'PREMIUM_CAR_RENTAL'];
-
-
-
-export const PACE_INTENSITIES: PaceIntensity[] = ['EASY', 'MODERATE', 'AMBITIOUS'];
 
 
 
@@ -416,37 +422,13 @@ export function toPreferenceProfilePayload(profile: PreferenceProfile): Preferen
 
     pace: profile.pace!,
 
-    paceIntensity: profile.pace === 'ACTIVE' ? profile.paceIntensity : null,
+    paceIntensity: null,
 
     additionalRequirements: sanitizeAdditionalRequirements(profile.additionalRequirements),
 
   };
 
 }
-
-
-
-export const INTEREST_OPTIONS: InterestOption[] = [
-
-  { label: 'Child-friendly', icon: 'pi-users' },
-
-  { label: 'Restaurants', icon: 'pi-shop' },
-
-  { label: 'Nature', icon: 'pi-sun' },
-
-  { label: 'Photography spots', icon: 'pi-camera' },
-
-  { label: 'Adventure', icon: 'pi-compass' },
-
-  { label: 'Culture & History', icon: 'pi-building' },
-
-  { label: 'Nightlife', icon: 'pi-moon' },
-
-  { label: 'Beaches', icon: 'pi-globe' },
-
-];
-
-
 
 export const BUDGET_OPTIONS: Array<{
 

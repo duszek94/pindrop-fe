@@ -202,6 +202,42 @@
         "placeholder": "np. trasy dostępne dla wózków, obowiązkowa wizyta w Auschwitz, bez wczesnych poranków, podróż z psem"
       }
     },
+    "interests": {
+      "title": "Co brzmi dobrze w {{destination}}?",
+      "subtitle": "Wybierz 1–3, które są dla Ciebie najważniejsze",
+      "selectionHint": "Wybrano {{count}} z {{max}}",
+      "loading": "Ładowanie propozycji…",
+      "loadFailed": "Nie udało się załadować propozycji zainteresowań. Wróć i spróbuj ponownie.",
+      "minRequired": "Wybierz co najmniej jedno zainteresowanie, aby kontynuować.",
+      "maxReached": "Możesz wybrać maksymalnie 3 zainteresowania.",
+      "aiNote": "Nasze AI wykorzysta Twoje wybory, aby stworzyć unikalne doświadczenia w {{destination}}.",
+      "requirements": {
+        "toggle": "Dodaj specjalne wymagania",
+        "heading": "Czy jest coś jeszcze, o czym powinniśmy wiedzieć?",
+        "collapse": "Ukryj",
+        "placeholder": "np. trasy dostępne dla wózków, obowiązkowa wizyta w Auschwitz, bez wczesnych poranków, podróż z psem"
+      },
+      "options": {
+        "culture": "Kultura",
+        "history": "Historia",
+        "architecture": "Architektura",
+        "food": "Jedzenie i restauracje",
+        "nightlife": "Nocne życie",
+        "localMarkets": "Lokalne targi",
+        "museums": "Muzea",
+        "streetArt": "Sztuka uliczna",
+        "shopping": "Zakupy",
+        "hiking": "Wędrówki",
+        "mountains": "Szczyty górskie",
+        "beaches": "Plaże",
+        "wildlife": "Przyroda i dzika fauna",
+        "scenicViews": "Malownicze widoki",
+        "waterActivities": "Sporty wodne",
+        "photography": "Fotografia",
+        "adventure": "Przygoda",
+        "wellness": "Wellness i spa"
+      }
+    },
     "proposals": {
       "costBreakdown": "Szacunkowe koszty",
       "costDisclaimer": "Estymaty AI — niezweryfikowane ceny. Rzeczywiste koszty mogą się różnić.",

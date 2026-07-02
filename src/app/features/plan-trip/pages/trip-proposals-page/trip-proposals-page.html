@@ -180,13 +180,17 @@
     }
   </div>
 
-  <button
-    type="button"
-    class="trip-proposals__cta"
-    [disabled]="loading()"
-    (click)="viewItinerary()"
-  >
-    View Full Itinerary
-    <i class="pi pi-angle-right" aria-hidden="true"></i>
-  </button>
+  <footer class="trip-proposals__footer">
+    <div class="trip-proposals__footer-inner">
+      <button
+        type="button"
+        class="trip-proposals__cta"
+        [disabled]="loading()"
+        (click)="viewItinerary()"
+      >
+        View Full Itinerary
+        <i class="pi pi-angle-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  </footer>
 </div>

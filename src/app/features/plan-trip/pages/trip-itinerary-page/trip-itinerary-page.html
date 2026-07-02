@@ -44,10 +44,24 @@
     </div>
 
     <footer class="trip-itinerary__footer">
-      <button pButton type="button" class="p-button-outlined" [disabled]="loading()" (click)="regenerateAll()">
-        Regenerate
-      </button>
-      <button pButton type="button" [disabled]="loading()" (click)="saveTrip()">Save Trip</button>
+      <div class="trip-itinerary__footer-inner">
+        <button
+          type="button"
+          class="trip-itinerary__cta trip-itinerary__cta--secondary"
+          [disabled]="loading()"
+          (click)="regenerateAll()"
+        >
+          Regenerate
+        </button>
+        <button
+          type="button"
+          class="trip-itinerary__cta"
+          [disabled]="loading()"
+          (click)="saveTrip()"
+        >
+          Save Trip
+        </button>
+      </div>
     </footer>
   </div>
 } @else if (loading()) {

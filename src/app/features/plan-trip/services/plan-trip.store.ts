@@ -15,6 +15,7 @@ export class PlanTripStore {
   readonly wizardStep = signal(1);
   readonly destinationForm = signal<WizardDestinationForm>({
     destination: '',
+    placeType: null,
     lat: 0,
     lng: 0,
     startDate: null,
@@ -32,7 +33,14 @@ export class PlanTripStore {
   reset(): void {
     this.tripId.set(null);
     this.wizardStep.set(1);
-    this.destinationForm.set({ destination: '', lat: 0, lng: 0, startDate: null, endDate: null });
+    this.destinationForm.set({
+      destination: '',
+      placeType: null,
+      lat: 0,
+      lng: 0,
+      startDate: null,
+      endDate: null,
+    });
     this.preferenceProfile.set(createDefaultPreferenceProfile());
     this.interests.set([]);
     this.proposals.set([]);

@@ -1,9 +1,15 @@
 @use '../../../../../styles/auth-tokens';
 
 .trip-itinerary {
-  max-width: 48rem;
+  --trip-itinerary-shell-width: 72rem;
+  --trip-itinerary-content-width: 48rem;
+  --trip-itinerary-footer-height: 4.75rem;
+  --trip-itinerary-gutter: 1rem;
+
+  max-width: var(--trip-itinerary-content-width);
   margin: 0 auto;
-  padding: 1rem 1rem 5rem;
+  padding: 1rem var(--trip-itinerary-gutter)
+    calc(var(--trip-itinerary-footer-height) + 5rem + env(safe-area-inset-bottom));
 }
 
 .trip-itinerary__back {
@@ -103,15 +109,61 @@
 
 .trip-itinerary__footer {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 4.5rem;
-  display: flex;
-  justify-content: center;
+  inset-inline: 0;
+  bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  z-index: 35;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgb(42 52 65 / 65%);
+  background: rgb(5 8 16 / 96%);
+  backdrop-filter: blur(12px);
+}
+
+.trip-itinerary__footer-inner {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
-  padding: 1rem;
-  background: rgb(5 8 16 / 92%);
-  border-top: 1px solid rgb(42 52 65 / 80%);
+  width: min(100%, var(--trip-itinerary-shell-width));
+  margin-inline: auto;
+}
+
+.trip-itinerary__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.875rem 1.25rem;
+  border: 0;
+  border-radius: 0.875rem;
+  background: var(--pindrop-primary);
+  color: var(--pindrop-primary-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--pindrop-primary-hover);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  &--secondary {
+    border: 1px solid var(--pindrop-primary);
+    background: transparent;
+    color: var(--pindrop-primary);
+
+    &:hover:not(:disabled) {
+      background: rgb(16 185 129 / 10%);
+    }
+  }
 }
 
 .trip-itinerary__loading,
@@ -122,4 +174,21 @@
 
 .trip-itinerary__error {
   color: #f87171;
+}
+
+@media (min-width: 720px) {
+  .trip-itinerary {
+    --trip-itinerary-gutter: 1.5rem;
+  }
+}
+
+@media (min-width: 960px) {
+  .trip-itinerary {
+    padding-bottom: calc(var(--trip-itinerary-footer-height) + 1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .trip-itinerary__footer {
+    bottom: 0;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
 }

@@ -202,6 +202,42 @@
         "placeholder": "e.g. wheelchair-accessible routes, must visit Auschwitz, no early mornings, traveling with a dog"
       }
     },
+    "interests": {
+      "title": "What sounds good in {{destination}}?",
+      "subtitle": "Pick 1–3 that matter most for your trip",
+      "selectionHint": "{{count}} of {{max}} selected",
+      "loading": "Loading suggestions…",
+      "loadFailed": "Could not load interest suggestions. Please go back and try again.",
+      "minRequired": "Select at least one interest to continue.",
+      "maxReached": "You can select up to 3 interests.",
+      "aiNote": "Our AI will use your selections to craft unique experiences in {{destination}}.",
+      "requirements": {
+        "toggle": "Add special requirements",
+        "heading": "Anything else we should know?",
+        "collapse": "Hide",
+        "placeholder": "e.g. wheelchair-accessible routes, must visit Auschwitz, no early mornings, traveling with a dog"
+      },
+      "options": {
+        "culture": "Culture",
+        "history": "History",
+        "architecture": "Architecture",
+        "food": "Food & dining",
+        "nightlife": "Nightlife",
+        "localMarkets": "Local markets",
+        "museums": "Museums",
+        "streetArt": "Street art",
+        "shopping": "Shopping",
+        "hiking": "Hiking",
+        "mountains": "Mountain peaks",
+        "beaches": "Beaches",
+        "wildlife": "Wildlife",
+        "scenicViews": "Scenic views",
+        "waterActivities": "Water activities",
+        "photography": "Photography",
+        "adventure": "Adventure",
+        "wellness": "Wellness & spa"
+      }
+    },
     "proposals": {
       "costBreakdown": "Estimated costs",
       "costDisclaimer": "AI-generated estimates — not verified prices. Actual costs may vary.",

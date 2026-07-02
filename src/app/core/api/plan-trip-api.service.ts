@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import type {
+  InterestSuggestion,
   PlaceResult,
   PreferenceProfile,
   ProposalType,
@@ -28,7 +29,7 @@ export class PlanTripApiService {
     });
   }
 
-  getPopularDestinations(limit = 6): Observable<PlaceResult[]> {
+  getPopularDestinations(limit = 4): Observable<PlaceResult[]> {
     return this.http.get<PlaceResult[]>(`${this.baseUrl}/places/popular`, {
       params: { limit: String(limit) },
     });
@@ -38,6 +39,7 @@ export class PlanTripApiService {
     tripId: number,
     body: {
       destination: string;
+      placeType: string | null;
       lat: number;
       lng: number;
       startDate: string;
@@ -45,6 +47,10 @@ export class PlanTripApiService {
     },
   ): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/trips/${tripId}/wizard/destination`, body);
+  }
+
+  getInterestSuggestions(tripId: number): Observable<InterestSuggestion[]> {
+    return this.http.get<InterestSuggestion[]>(`${this.baseUrl}/trips/${tripId}/wizard/interest-suggestions`);
   }
 
   updatePreferences(tripId: number, body: { preferenceProfile: PreferenceProfile }): Observable<void> {

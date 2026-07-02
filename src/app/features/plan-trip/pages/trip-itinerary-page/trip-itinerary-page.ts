@@ -1,7 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { catchError, finalize, of } from 'rxjs';
 
 import { PlanTripApiService } from '../../../../core/api/plan-trip-api.service';
@@ -10,7 +9,7 @@ import { PlanTripStore } from '../../services/plan-trip.store';
 
 @Component({
   selector: 'app-trip-itinerary-page',
-  imports: [ButtonModule, DatePipe],
+  imports: [DatePipe],
   templateUrl: './trip-itinerary-page.html',
   styleUrl: './trip-itinerary-page.scss',
 })
@@ -62,9 +61,16 @@ export class TripItineraryPage implements OnInit {
       .regenerateItinerary(tripId)
       .pipe(
         finalize(() => this.store.loading.set(false)),
-        catchError(() => of([])),
+        catchError(() => {
+          this.store.error.set('Failed to regenerate itinerary.');
+          return of(null);
+        }),
       )
-      .subscribe(() => this.loadDay(tripId, day));
+      .subscribe((result) => {
+        if (result) {
+          this.loadDay(tripId, day);
+        }
+      });
   }
 
   protected saveTrip(): void {

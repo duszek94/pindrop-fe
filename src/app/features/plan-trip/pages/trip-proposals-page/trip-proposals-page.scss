@@ -1,9 +1,14 @@
 @use '../../../../../styles/auth-tokens';
 
 .trip-proposals {
-  max-width: 72rem;
+  --trip-proposals-shell-width: 72rem;
+  --trip-proposals-footer-height: 4.75rem;
+  --trip-proposals-gutter: 1rem;
+
+  max-width: var(--trip-proposals-shell-width);
   margin: 0 auto;
-  padding: 1rem 1rem 2.5rem;
+  padding: 1rem var(--trip-proposals-gutter)
+    calc(var(--trip-proposals-footer-height) + 5rem + env(safe-area-inset-bottom));
   color: var(--pindrop-text);
 }
 
@@ -70,7 +75,6 @@
 .trip-proposals__grid {
   display: grid;
   gap: 1rem;
-  margin-bottom: 2rem;
 
   @media (min-width: 900px) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -354,15 +358,29 @@
   line-height: 1.45;
 }
 
+.trip-proposals__footer {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  z-index: 35;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgb(42 52 65 / 65%);
+  background: rgb(5 8 16 / 96%);
+  backdrop-filter: blur(12px);
+}
+
+.trip-proposals__footer-inner {
+  width: min(100%, var(--trip-proposals-shell-width));
+  margin-inline: auto;
+}
+
 .trip-proposals__cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  max-width: 22rem;
   min-height: 3rem;
-  margin: 0 auto;
   padding: 0.875rem 1.25rem;
   border: 0;
   border-radius: 0.875rem;
@@ -393,6 +411,23 @@
   background: rgb(248 113 113 / 8%);
   color: var(--pindrop-danger);
   font-size: 0.875rem;
+}
+
+@media (min-width: 720px) {
+  .trip-proposals {
+    --trip-proposals-gutter: 1.5rem;
+  }
+}
+
+@media (min-width: 960px) {
+  .trip-proposals {
+    padding-bottom: calc(var(--trip-proposals-footer-height) + 1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .trip-proposals__footer {
+    bottom: 0;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
 }
 
 @media (max-width: 899px) {

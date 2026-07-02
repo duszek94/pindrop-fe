@@ -4,7 +4,7 @@ import type {
   TripStatusApi,
 } from '../../../core/models/dashboard-api.models';
 import type { FavoriteItinerary, Trip, TripStatus } from '../../../core/models/dashboard.models';
-import { resolveDestinationImage } from '../../plan-trip/data/wizard-destinations';
+import { isLikelyMapImage } from '../../plan-trip/data/wizard-destinations';
 
 const TRIP_ICONS: Array<{ icon: string; iconTone: Trip['iconTone'] }> = [
   { icon: 'pi-building', iconTone: 'rose' },
@@ -73,11 +73,11 @@ function isUsableImageUrl(url: string | null | undefined): url is string {
 }
 
 function resolveTripCoverImage(trip: TripResponse): string | null {
-  if (isUsableImageUrl(trip.coverImageUrl)) {
+  if (isUsableImageUrl(trip.coverImageUrl) && !isLikelyMapImage(trip.coverImageUrl)) {
     return trip.coverImageUrl;
   }
 
-  return resolveDestinationImage(trip.destination || trip.title) ?? null;
+  return null;
 }
 
 function resolveItineraryCoverImage(url: string | null): string | null {

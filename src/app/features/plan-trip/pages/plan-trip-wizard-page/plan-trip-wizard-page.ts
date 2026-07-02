@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 
@@ -6,7 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { catchError, debounceTime, distinctUntilChanged, finalize, map, of, Subject, switchMap } from 'rxjs';
+import { catchError, debounceTime, finalize, map, of, Subject, switchMap } from 'rxjs';
 
 
 
@@ -16,7 +16,7 @@ import { LanguageService } from '../../../../core/i18n/language.service';
 
 import type {
 
-  PaceIntensity,
+  InterestSuggestion,
 
   PlaceResult,
 
@@ -37,10 +37,6 @@ import type {
 import {
 
   BUDGET_OPTIONS,
-
-  INTEREST_OPTIONS,
-
-  PACE_INTENSITIES,
 
   PACE_OPTIONS,
 
@@ -78,7 +74,7 @@ import {
 
 } from '../../../../shared/utils/trip-dates.validation';
 
-import { WIZARD_STEPS, DESTINATION_IMAGE_FALLBACK, resolveDestinationImage } from '../../data/wizard-destinations';
+import { WIZARD_STEPS, DESTINATION_IMAGE_FALLBACK, resolveDestinationPhoto } from '../../data/wizard-destinations';
 
 import { DestinationMapPickerComponent } from '../../components/destination-map-picker/destination-map-picker';
 
@@ -136,7 +132,7 @@ export class PlanTripWizardPage implements OnInit {
 
   protected readonly destinationImageFallback = DESTINATION_IMAGE_FALLBACK;
 
-  protected readonly resolveDestinationImage = resolveDestinationImage;
+  protected readonly resolveDestinationPhoto = resolveDestinationPhoto;
 
   protected readonly wizardSteps = WIZARD_STEPS;
 
@@ -144,15 +140,19 @@ export class PlanTripWizardPage implements OnInit {
 
   protected readonly paceOptions = PACE_OPTIONS;
 
-  protected readonly interestOptions = INTEREST_OPTIONS;
+  protected readonly maxInterests = 3;
+
+  protected readonly interestSuggestions = signal<InterestSuggestion[]>([]);
+
+  protected readonly interestSuggestionsLoading = signal(false);
+
+  protected readonly interestsTouched = signal(false);
 
   protected readonly preferenceCategories = PREFERENCE_CATEGORIES;
 
   protected readonly spendingPriorities = SPENDING_PRIORITIES;
 
   protected readonly transportModes = TRANSPORT_MODES;
-
-  protected readonly paceIntensities = PACE_INTENSITIES;
 
   protected readonly selectedChip = signal<string | null>(null);
 
@@ -177,6 +177,28 @@ export class PlanTripWizardPage implements OnInit {
   protected readonly hasCarMode = computed(() =>
 
     hasCarTransportMode(this.preferenceProfile().transportModes),
+
+  );
+
+  protected readonly destinationHeadline = computed(() => {
+
+    const destination = this.destinationForm().destination.trim();
+
+    if (!destination) {
+
+      return '';
+
+    }
+
+    return destination.split(',')[0]?.trim() ?? destination;
+
+  });
+
+  protected readonly selectedInterestCount = computed(() => this.interests().length);
+
+  protected readonly canSelectMoreInterests = computed(
+
+    () => this.selectedInterestCount() < this.maxInterests,
 
   );
 
@@ -224,6 +246,20 @@ export class PlanTripWizardPage implements OnInit {
 
     });
 
+    effect(() => {
+
+      const step = this.step();
+
+      const tripId = this.store.tripId();
+
+      if (step === 3 && tripId) {
+
+        untracked(() => this.loadInterestSuggestions());
+
+      }
+
+    });
+
   }
 
 
@@ -250,34 +286,19 @@ export class PlanTripWizardPage implements OnInit {
 
         debounceTime(300),
 
-        distinctUntilChanged(),
-
         switchMap((q) =>
-
           this.planTripApi.searchPlaces(q).pipe(
-
             map((results) => ({ query: q, results })),
-
             catchError(() => of({ query: q, results: [] as PlaceResult[] })),
-
           ),
-
         ),
-
       )
-
       .subscribe(({ query, results }) => {
-
         const currentQuery = this.destinationForm().destination.trim();
-
         if (query !== currentQuery) {
-
           return;
-
         }
-
         this.placeResults.set(results);
-
       });
 
   }
@@ -363,14 +384,6 @@ export class PlanTripWizardPage implements OnInit {
   protected transportLabelKey(mode: TransportMode): string {
 
     return `planTrip.preferences.transport.modes.${mode.toLowerCase()}`;
-
-  }
-
-
-
-  protected intensityLabelKey(intensity: PaceIntensity): string {
-
-    return `planTrip.preferences.pace.intensity.${intensity.toLowerCase()}`;
 
   }
 
@@ -462,25 +475,7 @@ export class PlanTripWizardPage implements OnInit {
 
       pace,
 
-      paceIntensity: pace === 'ACTIVE' ? profile.paceIntensity : null,
-
-    }));
-
-    this.store.error.set(null);
-
-  }
-
-
-
-  protected setPaceIntensity(intensity: PaceIntensity): void {
-
-    this.preferencesTouched.set(true);
-
-    this.preferenceProfile.update((profile) => ({
-
-      ...profile,
-
-      paceIntensity: profile.paceIntensity === intensity ? null : intensity,
+      paceIntensity: null,
 
     }));
 
@@ -516,13 +511,11 @@ export class PlanTripWizardPage implements OnInit {
 
     this.touched.update((state) => ({ ...state, destination: true }));
 
-    this.destinationForm.update((f) => ({ ...f, destination: value, lat: 0, lng: 0 }));
+    this.destinationForm.update((f) => ({ ...f, destination: value, placeType: null, lat: 0, lng: 0 }));
 
     this.selectedChip.set(null);
 
     this.store.error.set(null);
-
-
 
     if (value.length >= 2) {
 
@@ -676,6 +669,8 @@ export class PlanTripWizardPage implements OnInit {
 
       destination: place.displayName,
 
+      placeType: place.placeType,
+
       lat: place.lat,
 
       lng: place.lng,
@@ -706,7 +701,7 @@ export class PlanTripWizardPage implements OnInit {
 
     this.planTripApi
 
-      .getPopularDestinations(6)
+      .getPopularDestinations(4)
 
       .pipe(
 
@@ -868,6 +863,8 @@ export class PlanTripWizardPage implements OnInit {
 
         destination: form.destination,
 
+        placeType: form.placeType,
+
         lat: form.lat,
 
         lng: form.lng,
@@ -926,7 +923,15 @@ export class PlanTripWizardPage implements OnInit {
 
       .subscribe({
 
-        next: () => this.store.wizardStep.set(3),
+        next: () => {
+
+          this.interests.set([]);
+
+          this.interestsTouched.set(false);
+
+          this.store.wizardStep.set(3);
+
+        },
 
         error: () => this.store.error.set('Failed to save preferences.'),
 
@@ -936,19 +941,107 @@ export class PlanTripWizardPage implements OnInit {
 
 
 
-  protected toggleInterest(interest: string): void {
+  private loadInterestSuggestions(): void {
+
+    const tripId = this.store.tripId();
+
+    if (!tripId || this.interestSuggestionsLoading()) {
+
+      return;
+
+    }
+
+
+
+    this.interestSuggestionsLoading.set(true);
+
+    this.store.error.set(null);
+
+
+
+    this.planTripApi
+
+      .getInterestSuggestions(tripId)
+
+      .pipe(
+
+        catchError(() => {
+
+          this.store.error.set('planTrip.interests.loadFailed');
+
+          return of([]);
+
+        }),
+
+        finalize(() => this.interestSuggestionsLoading.set(false)),
+
+      )
+
+      .subscribe((suggestions) => {
+
+        this.interestSuggestions.set(suggestions);
+
+        if (this.interests().length === 0) {
+
+          const recommended = suggestions
+
+            .filter((suggestion) => suggestion.recommended)
+
+            .slice(0, 2)
+
+            .map((suggestion) => suggestion.id);
+
+          this.interests.set(recommended);
+
+        }
+
+      });
+
+  }
+
+
+
+  protected isInterestSelected(interestId: string): boolean {
+
+    return this.interests().includes(interestId);
+
+  }
+
+
+
+  protected isInterestDisabled(interestId: string): boolean {
+
+    return !this.isInterestSelected(interestId) && !this.canSelectMoreInterests();
+
+  }
+
+
+
+  protected toggleInterest(interestId: string): void {
+
+    this.interestsTouched.set(true);
+
+    this.store.error.set(null);
 
     const current = this.interests();
 
-    if (current.includes(interest)) {
+    if (current.includes(interestId)) {
 
-      this.interests.set(current.filter((i) => i !== interest));
+      this.interests.set(current.filter((id) => id !== interestId));
 
-    } else {
-
-      this.interests.set([...current, interest]);
+      return;
 
     }
+
+    if (current.length >= this.maxInterests) {
+
+      this.store.error.set('planTrip.interests.maxReached');
+
+      return;
+
+    }
+
+    this.interests.set([...current, interestId]);
 
   }
 
@@ -956,17 +1049,45 @@ export class PlanTripWizardPage implements OnInit {
 
   protected generateProposals(): void {
 
+    this.interestsTouched.set(true);
+
+    const selected = this.interests();
+
+    if (selected.length === 0) {
+
+      this.store.error.set('planTrip.interests.minRequired');
+
+      return;
+
+    }
+
+    if (selected.length > this.maxInterests) {
+
+      this.store.error.set('planTrip.interests.maxReached');
+
+      return;
+
+    }
+
+
+
     this.store.loading.set(true);
 
     this.store.error.set(null);
 
     const tripId = this.store.tripId()!;
 
+    const profile = toPreferenceProfilePayload(this.preferenceProfile());
+
+
+
     this.planTripApi
 
-      .updateInterests(tripId, this.interests())
+      .updatePreferences(tripId, { preferenceProfile: profile })
 
       .pipe(
+
+        switchMap(() => this.planTripApi.updateInterests(tripId, selected)),
 
         switchMap(() => this.planTripApi.generateProposals(tripId)),
 
