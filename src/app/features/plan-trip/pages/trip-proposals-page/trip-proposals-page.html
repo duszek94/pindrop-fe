@@ -48,6 +48,16 @@
 
           <h2 class="trip-proposals__card-title">{{ proposalTypeLabel(proposal.type) }}</h2>
           <p class="trip-proposals__card-summary">{{ proposal.summary }}</p>
+          @if (proposal.primaryMotivation || proposal.tripFormat) {
+            <p class="trip-proposals__taxonomy">
+              @if (proposal.primaryMotivation) {
+                <span>{{ formatTaxonomyLabel(proposal.primaryMotivation) }}</span>
+              }
+              @if (proposal.tripFormat) {
+                <span> · {{ formatTaxonomyLabel(proposal.tripFormat) }}</span>
+              }
+            </p>
+          }
         </div>
 
         <div class="trip-proposals__card-body">

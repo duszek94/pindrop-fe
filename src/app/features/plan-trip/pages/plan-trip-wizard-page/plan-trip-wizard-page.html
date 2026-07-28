@@ -38,14 +38,14 @@
   </div>
 
   <div class="plan-trip__content">
-  @if (error()) {
-    <p class="plan-trip__error" role="alert">{{ error() | translate }}</p>
+  @if (globalError(); as apiError) {
+    <p class="plan-trip__error plan-trip__error--global" role="alert">{{ apiError | translate }}</p>
   }
 
   @if (step() === 1) {
     <section class="plan-trip__section">
       <h1 class="plan-trip__title">Where do you want to go?</h1>
-      <p class="plan-trip__subtitle">Enter your destination and travel dates</p>
+      <p class="plan-trip__subtitle">Enter your destination, travel dates, and arrival and departure times</p>
 
       <div class="plan-trip__fields">
       <div class="pindrop-field plan-trip__destination-field">
@@ -154,6 +154,45 @@
         </div>
       </div>
 
+      <div class="pindrop-field-row plan-trip__times">
+        <div class="pindrop-field">
+          <label class="plan-trip__label" for="arrivalTime">{{ 'planTrip.destination.arrivalTime.label' | translate }}</label>
+          <p class="plan-trip__field-hint">{{ 'planTrip.destination.arrivalTime.hint' | translate }}</p>
+          <input
+            id="arrivalTime"
+            type="time"
+            class="plan-trip__time-input"
+            [class.plan-trip__time-input--invalid]="shouldShowTimeError('arrivalTime')"
+            [value]="destinationForm().arrivalTime"
+            (input)="onArrivalTimeInput($any($event.target).value)"
+            (blur)="touched.update((s) => ({ ...s, arrivalTime: true }))"
+          />
+          <div class="pindrop-field-error-slot" aria-live="polite">
+            @if (shouldShowTimeError('arrivalTime') && getTimeErrorKey('arrivalTime'); as errorKey) {
+              <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+            }
+          </div>
+        </div>
+        <div class="pindrop-field">
+          <label class="plan-trip__label" for="departureTime">{{ 'planTrip.destination.departureTime.label' | translate }}</label>
+          <p class="plan-trip__field-hint">{{ 'planTrip.destination.departureTime.hint' | translate }}</p>
+          <input
+            id="departureTime"
+            type="time"
+            class="plan-trip__time-input"
+            [class.plan-trip__time-input--invalid]="shouldShowTimeError('departureTime')"
+            [value]="destinationForm().departureTime"
+            (input)="onDepartureTimeInput($any($event.target).value)"
+            (blur)="touched.update((s) => ({ ...s, departureTime: true }))"
+          />
+          <div class="pindrop-field-error-slot" aria-live="polite">
+            @if (shouldShowTimeError('departureTime') && getTimeErrorKey('departureTime'); as errorKey) {
+              <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+            }
+          </div>
+        </div>
+      </div>
+
       <p class="plan-trip__section-label">Popular destinations</p>
       <div class="plan-trip__destinations">
         @if (popularDestinationsLoading()) {
@@ -204,59 +243,76 @@
       <h1 class="plan-trip__title">{{ 'planTrip.preferences.title' | translate }}</h1>
       <p class="plan-trip__subtitle">{{ 'planTrip.preferences.subtitle' | translate }}</p>
 
-      <div class="plan-trip__preference-section">
+      <div class="plan-trip__preference-section" id="preference-travelers" [class.plan-trip__preference-section--invalid]="shouldShowPreferenceError('travelers')">
+        <h2 class="plan-trip__section-heading">
+          <span class="plan-trip__section-heading-icon" aria-hidden="true">
+            <i class="pi pi-users"></i>
+          </span>
+          {{ 'planTrip.preferences.travelers.heading' | translate }}
+        </h2>
+        <div class="plan-trip__travelers">
+          <button
+            type="button"
+            class="plan-trip__stepper-btn"
+            [disabled]="travelerCount() <= travelerCountMin"
+            (click)="adjustTravelerCount(-1)"
+            [attr.aria-label]="'planTrip.preferences.travelers.decrease' | translate"
+          >
+            <i class="pi pi-minus" aria-hidden="true"></i>
+          </button>
+          <div class="plan-trip__travelers-value" aria-live="polite">
+            <strong>{{ travelerCount() }}</strong>
+            <span>{{ 'planTrip.preferences.travelers.people' | translate }}</span>
+          </div>
+          <button
+            type="button"
+            class="plan-trip__stepper-btn"
+            [disabled]="travelerCount() >= travelerCountMax"
+            (click)="adjustTravelerCount(1)"
+            [attr.aria-label]="'planTrip.preferences.travelers.increase' | translate"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="plan-trip__field-feedback" aria-live="polite">
+          @if (shouldShowPreferenceError('travelers') && getPreferenceErrorKey('travelers'); as errorKey) {
+            <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+          }
+        </div>
+      </div>
+
+      <div class="plan-trip__preference-section" id="preference-budget" [class.plan-trip__preference-section--invalid]="shouldShowPreferenceError('budget')">
         <h2 class="plan-trip__section-heading">
           <span class="plan-trip__section-heading-icon" aria-hidden="true">
             <i class="pi pi-wallet"></i>
           </span>
           {{ 'planTrip.preferences.budget.heading' | translate }}
         </h2>
-        <div class="plan-trip__preference-grid">
-          @for (opt of budgetOptions; track opt.tier) {
-            <button
-              type="button"
-              class="plan-trip__preference-card"
-              [class.plan-trip__preference-card--selected]="preferenceProfile().budgetStyle === opt.tier"
-              (click)="setBudgetStyle(opt.tier)"
-            >
-              <span class="plan-trip__preference-icon" aria-hidden="true">{{ opt.icon }}</span>
-              <strong class="plan-trip__preference-title">{{ opt.labelKey | translate }}</strong>
-              <span class="plan-trip__preference-desc">{{ opt.descriptionKey | translate }}</span>
-            </button>
+        <div class="plan-trip__budget-value" aria-live="polite">
+          <strong>€{{ preferenceProfile().dailyBudgetPerPersonEur }}</strong>
+          <span>{{ 'planTrip.preferences.budget.perPersonDay' | translate }}</span>
+        </div>
+        <p-slider
+          class="plan-trip__budget-slider"
+          [ngModel]="preferenceProfile().dailyBudgetPerPersonEur"
+          (ngModelChange)="setDailyBudget($event)"
+          [min]="dailyBudgetMin"
+          [max]="dailyBudgetMax"
+          [step]="dailyBudgetStep"
+        />
+        <div class="plan-trip__budget-scale">
+          <span>€{{ dailyBudgetMin }}</span>
+          <span>{{ budgetTierHint() | translate }}</span>
+          <span>€{{ dailyBudgetMax }}</span>
+        </div>
+        <div class="plan-trip__field-feedback" aria-live="polite">
+          @if (shouldShowPreferenceError('budget') && getPreferenceErrorKey('budget'); as errorKey) {
+            <small class="pindrop-field-error">{{ errorKey | translate }}</small>
           }
         </div>
       </div>
 
-      <div class="plan-trip__preference-section">
-        <h2 class="plan-trip__section-heading">
-          <span class="plan-trip__section-heading-icon" aria-hidden="true">
-            <i class="pi pi-sliders-h"></i>
-          </span>
-          {{ 'planTrip.preferences.priorities.heading' | translate }}
-        </h2>
-        <p class="plan-trip__section-hint">{{ 'planTrip.preferences.priorities.hint' | translate }}</p>
-        <div class="plan-trip__priority-rows">
-          @for (category of preferenceCategories; track category) {
-            <div class="plan-trip__priority-row">
-              <span class="plan-trip__priority-label">{{ categoryLabelKey(category) | translate }}</span>
-              <div class="plan-trip__priority-chips" role="group" [attr.aria-label]="categoryLabelKey(category) | translate">
-                @for (priority of spendingPriorities; track priority) {
-                  <button
-                    type="button"
-                    class="plan-trip__priority-chip"
-                    [class.plan-trip__priority-chip--selected]="preferenceProfile().categoryPriorities[category] === priority"
-                    (click)="setCategoryPriority(category, priority)"
-                  >
-                    {{ priorityLabelKey(priority) | translate }}
-                  </button>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-
-      <div class="plan-trip__preference-section">
+      <div class="plan-trip__preference-section" id="preference-pace" [class.plan-trip__preference-section--invalid]="shouldShowPreferenceError('pace')">
         <h2 class="plan-trip__section-heading">
           <span class="plan-trip__section-heading-icon" aria-hidden="true">
             <i class="pi pi-gauge"></i>
@@ -277,9 +333,14 @@
             </button>
           }
         </div>
+        <div class="plan-trip__field-feedback" aria-live="polite">
+          @if (shouldShowPreferenceError('pace') && getPreferenceErrorKey('pace'); as errorKey) {
+            <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+          }
+        </div>
       </div>
 
-      <div class="plan-trip__preference-section">
+      <div class="plan-trip__preference-section" id="preference-transport" [class.plan-trip__preference-section--invalid]="shouldShowPreferenceError('transport')">
         <h2 class="plan-trip__section-heading">
           <span class="plan-trip__section-heading-icon" aria-hidden="true">
             <i class="pi pi-directions"></i>
@@ -287,38 +348,86 @@
           {{ 'planTrip.preferences.transport.heading' | translate }}
         </h2>
         <p class="plan-trip__section-hint">{{ 'planTrip.preferences.transport.hint' | translate }}</p>
-        <div class="plan-trip__transport-chips">
-          @for (mode of transportModes; track mode) {
+        <div class="plan-trip__preference-grid plan-trip__preference-grid--transport">
+          @for (opt of transportPrimaryOptions; track opt.id) {
             <button
               type="button"
-              class="plan-trip__transport-chip"
-              [class.plan-trip__transport-chip--selected]="isTransportModeSelected(mode)"
-              (click)="toggleTransportMode(mode)"
+              class="plan-trip__preference-card"
+              [class.plan-trip__preference-card--selected]="selectedTransportPrimary() === opt.id"
+              (click)="setTransportPrimary(opt.id)"
             >
-              <span
-                class="plan-trip__transport-check"
-                [class.plan-trip__transport-check--checked]="isTransportModeSelected(mode)"
-                aria-hidden="true"
-              >
-                @if (isTransportModeSelected(mode)) {
-                  <i class="pi pi-check"></i>
-                }
+              <span class="plan-trip__preference-icon" aria-hidden="true">
+                <i [class]="'pi ' + opt.icon"></i>
               </span>
-              {{ transportLabelKey(mode) | translate }}
+              <strong class="plan-trip__preference-title">{{ opt.labelKey | translate }}</strong>
+              <span class="plan-trip__preference-desc">{{ opt.descriptionKey | translate }}</span>
             </button>
           }
         </div>
-        <label class="plan-trip__toggle">
-          <input
-            type="checkbox"
-            [checked]="preferenceProfile().avoidFlyingWhenTrainReasonable"
-            (change)="setAvoidFlying($any($event.target).checked)"
-          />
-          <span>{{ 'planTrip.preferences.transport.avoidFlying' | translate }}</span>
-        </label>
+
+        @if (selectedTransportPrimary() === 'CAR') {
+          <div class="plan-trip__refine-row" role="group" [attr.aria-label]="'planTrip.preferences.transport.carRefine.heading' | translate">
+            <p class="plan-trip__section-hint">{{ 'planTrip.preferences.transport.carRefine.heading' | translate }}</p>
+            <div class="plan-trip__transport-chips">
+              @for (opt of carRefineOptions; track opt.mode) {
+                <button
+                  type="button"
+                  class="plan-trip__transport-chip"
+                  [class.plan-trip__transport-chip--selected]="selectedCarRefineMode() === opt.mode"
+                  (click)="setCarRefineMode(opt.mode)"
+                >
+                  {{ opt.labelKey | translate }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (selectedTransportPrimary() === 'FLIGHTS' || selectedTransportPrimary() === 'MIX') {
+          <label class="plan-trip__toggle">
+            <input
+              type="checkbox"
+              [checked]="preferenceProfile().avoidFlyingWhenTrainReasonable"
+              (change)="setAvoidFlying($any($event.target).checked)"
+            />
+            <span>{{ 'planTrip.preferences.transport.avoidFlying' | translate }}</span>
+          </label>
+        }
+
         @if (hasCarMode()) {
           <p class="plan-trip__car-hint">{{ 'planTrip.preferences.transport.carHint' | translate }}</p>
         }
+        <div class="plan-trip__field-feedback" aria-live="polite">
+          @if (shouldShowPreferenceError('transport') && getPreferenceErrorKey('transport'); as errorKey) {
+            <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+          }
+        </div>
+      </div>
+
+      <div class="plan-trip__preference-section">
+        <h2 class="plan-trip__section-heading">
+          <span class="plan-trip__section-heading-icon" aria-hidden="true">
+            <i class="pi pi-building"></i>
+          </span>
+          {{ 'planTrip.preferences.accommodation.heading' | translate }}
+        </h2>
+        <p class="plan-trip__section-hint">{{ 'planTrip.preferences.accommodation.hint' | translate }}</p>
+        <div class="plan-trip__preference-grid plan-trip__preference-grid--stay">
+          @for (opt of accommodationOptions; track opt.style) {
+            <button
+              type="button"
+              class="plan-trip__preference-card"
+              [class.plan-trip__preference-card--selected]="preferenceProfile().accommodationStyle === opt.style"
+              (click)="setAccommodationStyle(opt.style)"
+            >
+              <span class="plan-trip__preference-icon" aria-hidden="true">
+                <i [class]="'pi ' + opt.icon"></i>
+              </span>
+              <strong class="plan-trip__preference-title">{{ opt.labelKey | translate }}</strong>
+              <span class="plan-trip__preference-desc">{{ opt.descriptionKey | translate }}</span>
+            </button>
+          }
+        </div>
       </div>
 
     </section>
@@ -331,50 +440,169 @@
       </h1>
       <p class="plan-trip__subtitle">{{ 'planTrip.interests.subtitle' | translate }}</p>
 
+      <div class="plan-trip__motivation-chips">
+        @for (chip of motivationChips; track chip.motivation) {
+          <button
+            type="button"
+            class="plan-trip__priority-chip"
+            [class.plan-trip__priority-chip--selected]="isMotivationSelected(chip.motivation)"
+            (click)="toggleMotivation(chip.motivation)"
+          >
+            {{ chip.labelKey | translate }}
+          </button>
+        }
+      </div>
+
+      <div id="interests-selection" class="plan-trip__interests-selection">
       <p class="plan-trip__interest-helper">
         {{ 'planTrip.interests.selectionHint' | translate: { count: selectedInterestCount(), max: maxInterests } }}
       </p>
+      <div class="plan-trip__field-feedback" aria-live="polite">
+        @if (interestsValidationError(); as errorKey) {
+          <small class="pindrop-field-error">{{ errorKey | translate }}</small>
+        } @else if (interestsLimitError(); as limitError) {
+          <small class="pindrop-field-error">{{ limitError | translate }}</small>
+        }
+      </div>
 
-      @if (interestSuggestionsLoading()) {
-        <div class="plan-trip__interests plan-trip__interests--loading" aria-busy="true">
-          @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
-            <div class="plan-trip__interest plan-trip__interest--skeleton"></div>
-          }
-        </div>
-      } @else if (interestSuggestions().length === 0) {
-        <p class="plan-trip__interest-empty">{{ 'planTrip.interests.loadFailed' | translate }}</p>
-      } @else {
-        <div class="plan-trip__interests">
-          @for (interest of interestSuggestions(); track interest.id) {
+      @if (selectedInterestItems().length > 0) {
+        <div class="plan-trip__selected-interests" aria-label="Selected interests">
+          @for (item of selectedInterestItems(); track item.id) {
             <button
               type="button"
-              class="plan-trip__interest"
-              [class.plan-trip__interest--selected]="isInterestSelected(interest.id)"
-              [class.plan-trip__interest--disabled]="isInterestDisabled(interest.id)"
-              [disabled]="isInterestDisabled(interest.id)"
-              (click)="toggleInterest(interest.id)"
+              class="plan-trip__selected-interest"
+              (click)="toggleInterest(item.id)"
             >
-              <span
-                class="plan-trip__interest-check"
-                [class.plan-trip__interest-check--checked]="isInterestSelected(interest.id)"
-                aria-hidden="true"
-              >
-                @if (isInterestSelected(interest.id)) {
-                  <i class="pi pi-check"></i>
-                }
-              </span>
-              <span class="plan-trip__interest-icon" aria-hidden="true">
-                <i [class]="'pi ' + interest.icon"></i>
-              </span>
-              <span class="plan-trip__interest-label">{{ interest.labelKey | translate }}</span>
+              <i [class]="'pi ' + item.icon" aria-hidden="true"></i>
+              <span>{{ item.labelKey | translate }}</span>
+              <i class="pi pi-times" aria-hidden="true"></i>
             </button>
           }
         </div>
       }
 
-      @if (interestsTouched() && selectedInterestCount() === 0 && !interestSuggestionsLoading()) {
-        <p class="plan-trip__field-error">{{ 'planTrip.interests.minRequired' | translate }}</p>
+      @if (interestSuggestionsLoading()) {
+        <div class="plan-trip__interests plan-trip__interests--recommended" aria-busy="true">
+          @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
+            <div class="plan-trip__interest plan-trip__interest--skeleton"></div>
+          }
+        </div>
+      } @else if (interestCatalog().length === 0) {
+        <p class="plan-trip__interest-empty">{{ 'planTrip.interests.loadFailed' | translate }}</p>
+      } @else {
+        @if (recommendedInterests().length > 0 && !isSearchingInterests()) {
+          <h2 class="plan-trip__interest-section-title">{{ 'planTrip.interests.recommendedHeading' | translate }}</h2>
+          <div class="plan-trip__interests plan-trip__interests--recommended">
+            @for (interest of recommendedInterests(); track interest.id) {
+              <button
+                type="button"
+                class="plan-trip__interest plan-trip__interest--compact"
+                [class.plan-trip__interest--selected]="isInterestSelected(interest.id)"
+                [class.plan-trip__interest--disabled]="isInterestDisabled(interest.id)"
+                [disabled]="isInterestDisabled(interest.id)"
+                (click)="toggleInterest(interest.id)"
+              >
+                <span
+                  class="plan-trip__interest-check"
+                  [class.plan-trip__interest-check--checked]="isInterestSelected(interest.id)"
+                  aria-hidden="true"
+                >
+                  @if (isInterestSelected(interest.id)) {
+                    <i class="pi pi-check"></i>
+                  }
+                </span>
+                <span class="plan-trip__interest-icon" aria-hidden="true">
+                  <i [class]="'pi ' + interest.icon"></i>
+                </span>
+                <span class="plan-trip__interest-label">{{ interest.labelKey | translate }}</span>
+              </button>
+            }
+          </div>
+        }
+
+        <div class="plan-trip__interest-search-wrap">
+          <div class="plan-trip__search plan-trip__interest-search">
+            <i class="pi pi-search" aria-hidden="true"></i>
+            <input
+              type="search"
+              [placeholder]="'planTrip.interests.searchPlaceholder' | translate"
+              [value]="interestSearch()"
+              (input)="onInterestSearch($any($event.target).value)"
+            />
+            @if (interestSearch()) {
+              <button
+                type="button"
+                class="plan-trip__interest-search-clear"
+                (click)="clearInterestSearch()"
+                [attr.aria-label]="'planTrip.interests.clearSearch' | translate"
+              >
+                <i class="pi pi-times" aria-hidden="true"></i>
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (!isSearchingInterests() && !browseInterestsOpen()) {
+          <button type="button" class="plan-trip__browse-toggle" (click)="toggleBrowseInterests()">
+            <i class="pi pi-th-large" aria-hidden="true"></i>
+            {{ 'planTrip.interests.browseAll' | translate }}
+          </button>
+        }
+
+        @if (showBrowsePanel()) {
+          <div class="plan-trip__interests-panel">
+            @if (isSearchingInterests()) {
+              <h2 class="plan-trip__interest-section-title">{{ 'planTrip.interests.searchResults' | translate }}</h2>
+            } @else {
+              <div class="plan-trip__interests-panel-header">
+                <h2 class="plan-trip__interest-section-title">{{ 'planTrip.interests.allHeading' | translate }}</h2>
+                <button type="button" class="plan-trip__browse-collapse" (click)="toggleBrowseInterests()">
+                  {{ 'planTrip.interests.hideBrowse' | translate }}
+                </button>
+              </div>
+            }
+
+            @if (browseInterests().length === 0) {
+              <p class="plan-trip__interest-empty">{{ 'planTrip.interests.noResults' | translate }}</p>
+            } @else {
+              <ul class="plan-trip__interest-list">
+                @for (interest of browseInterests(); track interest.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="plan-trip__interest-row"
+                      [class.plan-trip__interest-row--selected]="isInterestSelected(interest.id)"
+                      [class.plan-trip__interest-row--disabled]="isInterestDisabled(interest.id)"
+                      [disabled]="isInterestDisabled(interest.id)"
+                      (click)="toggleInterest(interest.id)"
+                    >
+                      <span class="plan-trip__interest-row-icon" aria-hidden="true">
+                        <i [class]="'pi ' + interest.icon"></i>
+                      </span>
+                      <span class="plan-trip__interest-row-body">
+                        <span class="plan-trip__interest-row-label">{{ interest.labelKey | translate }}</span>
+                        @if (interest.reasonKey) {
+                          <span class="plan-trip__interest-row-reason">{{ interest.reasonKey | translate }}</span>
+                        }
+                      </span>
+                      <span
+                        class="plan-trip__interest-check"
+                        [class.plan-trip__interest-check--checked]="isInterestSelected(interest.id)"
+                        aria-hidden="true"
+                      >
+                        @if (isInterestSelected(interest.id)) {
+                          <i class="pi pi-check"></i>
+                        }
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        }
       }
+      </div>
 
       <div class="plan-trip__requirements">
         @if (!additionalRequirementsExpanded()) {
@@ -453,4 +681,28 @@
       }
     </div>
   </footer>
+
+  @if (isGeneratingProposals()) {
+    <div
+      class="plan-trip__generation-overlay"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="plan-trip__generation-loader">
+        <div class="plan-trip__generation-visual" aria-hidden="true">
+          <span class="plan-trip__generation-ring plan-trip__generation-ring--outer"></span>
+          <span class="plan-trip__generation-ring plan-trip__generation-ring--inner"></span>
+          <span class="plan-trip__generation-glow"></span>
+          <span class="plan-trip__generation-icon">
+            <i class="pi pi-sparkles"></i>
+          </span>
+        </div>
+        <p class="plan-trip__generation-title">{{ 'planTrip.generation.title' | translate }}</p>
+        <p class="plan-trip__generation-subtitle">
+          {{ 'planTrip.generation.subtitle' | translate: { destination: destinationHeadline() } }}
+        </p>
+      </div>
+    </div>
+  }
 </div>

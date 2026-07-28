@@ -149,7 +149,6 @@ export class TripProposalsPage implements OnInit {
       .subscribe({
 
         next: (itinerary) => {
-
           this.store.itinerary.set(itinerary);
 
           this.store.selectedDay.set(1);
@@ -185,6 +184,14 @@ export class TripProposalsPage implements OnInit {
   protected proposalTypeLabel(type: ProposalType): string {
 
     return PROPOSAL_TYPE_LABELS[type];
+
+  }
+
+
+
+  protected formatTaxonomyLabel(value: string): string {
+
+    return value.replaceAll('_', ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
   }
 

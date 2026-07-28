@@ -127,11 +127,33 @@
     "language": "Language"
   },
   "planTrip": {
+    "destination": {
+      "arrivalTime": {
+        "label": "Arrival time on day 1",
+        "hint": "When you expect to reach your destination"
+      },
+      "departureTime": {
+        "label": "Departure time on last day",
+        "hint": "When you need to leave your destination"
+      }
+    },
     "preferences": {
       "title": "Set your preferences",
-      "subtitle": "Tell us how you like to travel so we can personalize your trip",
+      "subtitle": "A few essentials so we can personalize your trip",
+      "travelers": {
+        "heading": "Travelers",
+        "people": "people",
+        "decrease": "Fewer travelers",
+        "increase": "More travelers"
+      },
       "budget": {
-        "heading": "Overall budget style",
+        "heading": "Daily budget per person",
+        "perPersonDay": "per person / day",
+        "hint": {
+          "eco": "Budget-friendly",
+          "midRange": "Comfort",
+          "premium": "Premium"
+        },
         "eco": {
           "label": "Budget-conscious",
           "description": "Hostels, street food, free sights, public transit"
@@ -160,9 +182,37 @@
       },
       "transport": {
         "heading": "Getting around",
-        "hint": "Select at least one way you prefer to travel",
-        "avoidFlying": "Avoid flying when train is reasonable",
+        "hint": "Pick your main way to travel — you can refine details below",
+        "avoidFlying": "Prefer train over short flights when reasonable",
         "carHint": "Fuel, parking, and tolls will be included in transport estimates when you drive or rent a car.",
+        "primary": {
+          "public": {
+            "label": "Public & walking",
+            "description": "Transit, metro, and exploring on foot"
+          },
+          "car": {
+            "label": "Car",
+            "description": "Drive yourself for flexible day trips"
+          },
+          "trains": {
+            "label": "Trains",
+            "description": "Rail between cities, local transit on arrival"
+          },
+          "flights": {
+            "label": "Flights",
+            "description": "Fly longer legs, transit locally"
+          },
+          "mix": {
+            "label": "Mix",
+            "description": "Combine flights, trains, and local transit"
+          }
+        },
+        "carRefine": {
+          "heading": "What kind of car?",
+          "own": "Own car",
+          "budget": "Budget rental",
+          "premium": "Premium rental"
+        },
         "modes": {
           "public_transit": "Public transit",
           "trains": "Trains",
@@ -172,6 +222,31 @@
           "premium_car_rental": "Premium car rental",
           "walk_cycle": "Walking & cycling"
         }
+      },
+      "accommodation": {
+        "heading": "Where you'll stay",
+        "hint": "Optional — helps us match lodging to your budget",
+        "hotel": "Hotel",
+        "hotelDesc": "Private room",
+        "apartment": "Apartment",
+        "apartmentDesc": "Kitchen & space",
+        "hostel": "Hostel",
+        "hostelDesc": "Social & shared",
+        "resort": "Resort",
+        "resortDesc": "All-inclusive vibe",
+        "camping": "Camping",
+        "campingDesc": "Nature & outdoors",
+        "mixed": "Mixed",
+        "mixedDesc": "Various stay types",
+        "tent": "Tent / trek"
+      },
+      "party": {
+        "heading": "Who's traveling",
+        "solo": "Solo",
+        "couple": "Couple",
+        "family": "Family",
+        "friends": "Friends",
+        "group": "Group"
       },
       "pace": {
         "heading": "Travel pace",
@@ -202,15 +277,41 @@
         "placeholder": "e.g. wheelchair-accessible routes, must visit Auschwitz, no early mornings, traveling with a dog"
       }
     },
+    "generation": {
+      "title": "Crafting your trip",
+      "subtitle": "Our AI is building personalized proposals for {{destination}}…"
+    },
     "interests": {
       "title": "What sounds good in {{destination}}?",
-      "subtitle": "Pick 1–3 that matter most for your trip",
+      "subtitle": "Pick 1–5 interests that matter most for your trip",
       "selectionHint": "{{count}} of {{max}} selected",
+      "searchPlaceholder": "Search all interests…",
+      "clearSearch": "Clear search",
+      "recommendedHeading": "Recommended for you",
+      "allHeading": "More interests",
+      "searchResults": "Search results",
+      "browseAll": "Browse all interests",
+      "hideBrowse": "Hide",
+      "noResults": "No interests match your search.",
       "loading": "Loading suggestions…",
       "loadFailed": "Could not load interest suggestions. Please go back and try again.",
       "minRequired": "Select at least one interest to continue.",
-      "maxReached": "You can select up to 3 interests.",
+      "maxReached": "You can select up to 5 interests.",
       "aiNote": "Our AI will use your selections to craft unique experiences in {{destination}}.",
+      "motivations": {
+        "relax": "Relax & recharge",
+        "adventure": "Adventure",
+        "culture": "Culture",
+        "food": "Food & drink",
+        "nightlife": "Nightlife"
+      },
+      "reasons": {
+        "popular": "Popular for this trip",
+        "activePace": "Matches your active pace",
+        "mountainDestination": "Great for mountain trips",
+        "cityDestination": "Classic city break pick",
+        "familyParty": "Family-friendly"
+      },
       "requirements": {
         "toggle": "Add special requirements",
         "heading": "Anything else we should know?",
@@ -235,7 +336,36 @@
         "waterActivities": "Water activities",
         "photography": "Photography",
         "adventure": "Adventure",
-        "wellness": "Wellness & spa"
+        "wellness": "Wellness & spa",
+        "viaFerrata": "Via ferrata",
+        "rockClimbing": "Rock climbing",
+        "cycling": "Cycling",
+        "running": "Running",
+        "kayakSup": "Kayak & SUP",
+        "surf": "Surf",
+        "skiing": "Skiing",
+        "snowshoe": "Snowshoeing",
+        "camping": "Camping",
+        "nationalParks": "National parks",
+        "streetFood": "Street food",
+        "wineTasting": "Wine tasting",
+        "craftBeer": "Craft beer",
+        "nightclubs": "Nightclubs",
+        "liveMusic": "Live music",
+        "theater": "Theater",
+        "filmLocations": "Film locations",
+        "archaeology": "Archaeology",
+        "snorkeling": "Snorkeling",
+        "diving": "Diving",
+        "islandHopping": "Island hopping",
+        "sunsetViews": "Sunset views",
+        "familyFriendly": "Family-friendly",
+        "kidActivities": "Kid activities",
+        "romantic": "Romantic",
+        "festivals": "Festivals",
+        "yoga": "Yoga",
+        "thermalBaths": "Thermal baths",
+        "meditationRetreat": "Meditation retreat"
       }
     },
     "proposals": {
@@ -251,6 +381,17 @@
         "fuel": "Fuel",
         "parking": "Parking",
         "carRental": "Car rental"
+      }
+    },
+    "itinerary": {
+      "selfGuided": "Self-guided",
+      "dayTotal": "Day {{day}} total",
+      "links": {
+        "allTrails": "View on AllTrails",
+        "wikiloc": "View on Wikiloc",
+        "article": "Read article",
+        "maps": "Open in Maps",
+        "other": "Open link"
       }
     }
   },
@@ -275,6 +416,10 @@
       "mismatch": "Passwords do not match."
     },
     "planTrip": {
+      "origin": {
+        "required": "From location is required.",
+        "pickFromList": "Select a starting location from the suggestions or map."
+      },
       "destination": {
         "required": "Destination is required.",
         "pickFromList": "Select a destination from the suggestions, popular list, or map."
@@ -288,10 +433,20 @@
         "past": "End date cannot be in the past.",
         "beforeStart": "End date must be on or after the start date."
       },
+      "arrivalTime": {
+        "required": "Arrival time is required.",
+        "invalid": "Enter a valid arrival time."
+      },
+      "departureTime": {
+        "required": "Departure time is required.",
+        "invalid": "Enter a valid departure time.",
+        "beforeArrival": "Departure time must be after arrival time on a single-day trip."
+      },
       "preferences": {
-        "budgetRequired": "Please select a budget style.",
+        "budgetRequired": "Set a daily budget per person.",
+        "travelersRequired": "Choose how many people are traveling.",
         "paceRequired": "Please select a travel pace.",
-        "transportRequired": "Please select at least one transport mode.",
+        "transportRequired": "Please select how you'll get around.",
         "categoryRequired": "Please set a spending priority for each category."
       }
     }

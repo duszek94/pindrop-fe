@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import type {
+  ExpandAction,
   InterestSuggestion,
+  ItineraryActivity,
   PlaceResult,
   PreferenceProfile,
   ProposalType,
@@ -44,16 +46,25 @@ export class PlanTripApiService {
       lng: number;
       startDate: string;
       endDate: string;
+      arrivalTime: string;
+      departureTime: string;
     },
   ): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/trips/${tripId}/wizard/destination`, body);
+  }
+
+  getInterestCatalog(tripId: number): Observable<InterestSuggestion[]> {
+    return this.http.get<InterestSuggestion[]>(`${this.baseUrl}/trips/${tripId}/wizard/interest-catalog`);
   }
 
   getInterestSuggestions(tripId: number): Observable<InterestSuggestion[]> {
     return this.http.get<InterestSuggestion[]>(`${this.baseUrl}/trips/${tripId}/wizard/interest-suggestions`);
   }
 
-  updatePreferences(tripId: number, body: { preferenceProfile: PreferenceProfile }): Observable<void> {
+  updatePreferences(
+    tripId: number,
+    body: { preferenceProfile: PreferenceProfile; travelerCount: number },
+  ): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/trips/${tripId}/wizard/preferences`, body);
   }
 
@@ -82,6 +93,17 @@ export class PlanTripApiService {
     return this.http.post<TripItinerary>(
       `${this.baseUrl}/trips/${tripId}/itinerary/activities/${activityId}/regenerate`,
       null,
+    );
+  }
+
+  expandActivity(
+    tripId: number,
+    activityId: number,
+    expandAction?: ExpandAction,
+  ): Observable<ItineraryActivity[]> {
+    return this.http.post<ItineraryActivity[]>(
+      `${this.baseUrl}/trips/${tripId}/itinerary/activities/${activityId}/expand`,
+      expandAction ? { expandAction } : {},
     );
   }
 

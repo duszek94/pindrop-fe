@@ -127,11 +127,33 @@
     "language": "Język"
   },
   "planTrip": {
+    "destination": {
+      "arrivalTime": {
+        "label": "Godzina przyjazdu w pierwszym dniu",
+        "hint": "Kiedy spodziewasz się dotrzeć na miejsce"
+      },
+      "departureTime": {
+        "label": "Godzina wyjazdu w ostatnim dniu",
+        "hint": "Kiedy musisz opuścić miejsce docelowe"
+      }
+    },
     "preferences": {
       "title": "Ustaw preferencje",
-      "subtitle": "Powiedz nam, jak lubisz podróżować, aby spersonalizować wyjazd",
+      "subtitle": "Kilka kluczowych wyborów, aby spersonalizować wyjazd",
+      "travelers": {
+        "heading": "Podróżujący",
+        "people": "osób",
+        "decrease": "Mniej podróżujących",
+        "increase": "Więcej podróżujących"
+      },
       "budget": {
-        "heading": "Ogólny styl budżetu",
+        "heading": "Dzienny budżet na osobę",
+        "perPersonDay": "na osobę / dzień",
+        "hint": {
+          "eco": "Oszczędnie",
+          "midRange": "Komfortowo",
+          "premium": "Premium"
+        },
         "eco": {
           "label": "Oszczędnie",
           "description": "Hostele, street food, darmowe atrakcje, transport publiczny"
@@ -160,9 +182,37 @@
       },
       "transport": {
         "heading": "Jak się poruszać",
-        "hint": "Wybierz co najmniej jeden preferowany sposób podróży",
-        "avoidFlying": "Unikaj lotów, gdy pociąg ma sens",
+        "hint": "Wybierz główny sposób podróży — szczegóły doprecyzujesz poniżej",
+        "avoidFlying": "Preferuj pociąg zamiast krótkich lotów, gdy to rozsądne",
         "carHint": "Paliwo, parking i opłaty drogowe będą uwzględnione w szacunkach transportu, gdy jedziesz własnym autem lub wynajmujesz samochód.",
+        "primary": {
+          "public": {
+            "label": "Komunikacja i pieszo",
+            "description": "Metro, autobusy i zwiedzanie pieszo"
+          },
+          "car": {
+            "label": "Samochód",
+            "description": "Elastyczne wycieczki we własnym tempie"
+          },
+          "trains": {
+            "label": "Pociągi",
+            "description": "Kolej między miastami, lokalny transport na miejscu"
+          },
+          "flights": {
+            "label": "Loty",
+            "description": "Dłuższe odcinki samolotem, lokalnie komunikacją"
+          },
+          "mix": {
+            "label": "Mix",
+            "description": "Połączenie lotów, pociągów i lokalnego transportu"
+          }
+        },
+        "carRefine": {
+          "heading": "Jaki samochód?",
+          "own": "Własny",
+          "budget": "Tani wynajem",
+          "premium": "Premium wynajem"
+        },
         "modes": {
           "public_transit": "Transport publiczny",
           "trains": "Pociągi",
@@ -172,6 +222,31 @@
           "premium_car_rental": "Premium wynajem auta",
           "walk_cycle": "Spacer i rower"
         }
+      },
+      "accommodation": {
+        "heading": "Gdzie nocujesz",
+        "hint": "Opcjonalnie — pomoże dopasować noclegi do budżetu",
+        "hotel": "Hotel",
+        "hotelDesc": "Prywatny pokój",
+        "apartment": "Apartament",
+        "apartmentDesc": "Kuchnia i przestrzeń",
+        "hostel": "Hostel",
+        "hostelDesc": "Taniej i towarzysko",
+        "resort": "Resort",
+        "resortDesc": "All-inclusive",
+        "camping": "Camping",
+        "campingDesc": "Natura i outdoor",
+        "mixed": "Mix",
+        "mixedDesc": "Różne typy noclegów",
+        "tent": "Namiot / trekking"
+      },
+      "party": {
+        "heading": "Kto podróżuje",
+        "solo": "Solo",
+        "couple": "Para",
+        "family": "Rodzina",
+        "friends": "Przyjaciele",
+        "group": "Grupa"
       },
       "pace": {
         "heading": "Tempo podróży",
@@ -202,14 +277,26 @@
         "placeholder": "np. trasy dostępne dla wózków, obowiązkowa wizyta w Auschwitz, bez wczesnych poranków, podróż z psem"
       }
     },
+    "generation": {
+      "title": "Tworzymy Twój wyjazd",
+      "subtitle": "Nasza AI przygotowuje spersonalizowane propozycje dla {{destination}}…"
+    },
     "interests": {
       "title": "Co brzmi dobrze w {{destination}}?",
-      "subtitle": "Wybierz 1–3, które są dla Ciebie najważniejsze",
+      "subtitle": "Wybierz 1–5 zainteresowań najważniejszych dla Twojej podróży",
       "selectionHint": "Wybrano {{count}} z {{max}}",
+      "searchPlaceholder": "Szukaj zainteresowań…",
+      "clearSearch": "Wyczyść wyszukiwanie",
+      "recommendedHeading": "Polecane dla Ciebie",
+      "allHeading": "Więcej zainteresowań",
+      "searchResults": "Wyniki wyszukiwania",
+      "browseAll": "Przeglądaj wszystkie",
+      "hideBrowse": "Ukryj",
+      "noResults": "Brak wyników dla tego wyszukiwania.",
       "loading": "Ładowanie propozycji…",
       "loadFailed": "Nie udało się załadować propozycji zainteresowań. Wróć i spróbuj ponownie.",
       "minRequired": "Wybierz co najmniej jedno zainteresowanie, aby kontynuować.",
-      "maxReached": "Możesz wybrać maksymalnie 3 zainteresowania.",
+      "maxReached": "Możesz wybrać maksymalnie 5 zainteresowań.",
       "aiNote": "Nasze AI wykorzysta Twoje wybory, aby stworzyć unikalne doświadczenia w {{destination}}.",
       "requirements": {
         "toggle": "Dodaj specjalne wymagania",
@@ -252,6 +339,17 @@
         "parking": "Parking",
         "carRental": "Wynajem auta"
       }
+    },
+    "itinerary": {
+      "selfGuided": "Zwiedzanie samodzielne",
+      "dayTotal": "Suma dnia {{day}}",
+      "links": {
+        "allTrails": "Zobacz w AllTrails",
+        "wikiloc": "Zobacz w Wikiloc",
+        "article": "Przeczytaj artykuł",
+        "maps": "Otwórz w Mapach",
+        "other": "Otwórz link"
+      }
     }
   },
   "validation": {
@@ -275,6 +373,10 @@
       "mismatch": "Hasła nie są identyczne."
     },
     "planTrip": {
+      "origin": {
+        "required": "Miejsce startu jest wymagane.",
+        "pickFromList": "Wybierz miejsce startu z podpowiedzi lub mapy."
+      },
       "destination": {
         "required": "Destynacja jest wymagana.",
         "pickFromList": "Wybierz destynację z podpowiedzi, popularnych miejsc lub mapy."
@@ -288,10 +390,20 @@
         "past": "Data zakończenia nie może być w przeszłości.",
         "beforeStart": "Data zakończenia musi być taka sama lub późniejsza niż data rozpoczęcia."
       },
+      "arrivalTime": {
+        "required": "Godzina przyjazdu jest wymagana.",
+        "invalid": "Podaj prawidłową godzinę przyjazdu."
+      },
+      "departureTime": {
+        "required": "Godzina wyjazdu jest wymagana.",
+        "invalid": "Podaj prawidłową godzinę wyjazdu.",
+        "beforeArrival": "Godzina wyjazdu musi być późniejsza niż przyjazdu w jednodniowej podróży."
+      },
       "preferences": {
-        "budgetRequired": "Wybierz styl budżetu.",
+        "budgetRequired": "Ustaw dzienny budżet na osobę.",
+        "travelersRequired": "Wybierz liczbę podróżujących.",
         "paceRequired": "Wybierz tempo podróży.",
-        "transportRequired": "Wybierz co najmniej jeden sposób transportu.",
+        "transportRequired": "Wybierz, jak chcesz się poruszać.",
         "categoryRequired": "Ustaw priorytet wydatków dla każdej kategorii."
       }
     }
