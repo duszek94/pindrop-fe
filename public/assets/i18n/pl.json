@@ -343,14 +343,22 @@
       }
     },
     "itinerary": {
+      "back": "Wstecz",
+      "loading": "Ładowanie planu...",
+      "dayChip": "Dzień {{day}}",
+      "dayTitle": "Dzień {{day}}",
       "selfGuided": "Zwiedzanie samodzielne",
       "dayTotal": "SUMA DNIA {{day}}",
-      "backupHint": "Gdy pełno / deszcz",
+      "backupHint": "Skrót / plan na deszcz",
+      "regenerateDay": "Wygeneruj dzień ponownie",
+      "saveTrip": "Zapisz wyjazd",
       "links": {
         "allTrails": "Zobacz w AllTrails",
         "wikiloc": "Zobacz w Wikiloc",
         "article": "Przeczytaj artykuł",
         "maps": "Otwórz w Mapach",
+        "youtube": "Obejrzyj na YouTube",
+        "tickets": "Bilety",
         "other": "Otwórz link"
       }
     }

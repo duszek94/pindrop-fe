@@ -386,14 +386,22 @@
       }
     },
     "itinerary": {
+      "back": "Back",
+      "loading": "Loading itinerary...",
+      "dayChip": "Day {{day}}",
+      "dayTitle": "Day {{day}}",
       "selfGuided": "Self-guided",
       "dayTotal": "DAY {{day}} TOTAL",
-      "backupHint": "If full / rainy",
+      "backupHint": "Shorter route / rainy backup",
+      "regenerateDay": "Regenerate day",
+      "saveTrip": "Save Trip",
       "links": {
         "allTrails": "View on AllTrails",
         "wikiloc": "View on Wikiloc",
         "article": "Read article",
         "maps": "Open in Maps",
+        "youtube": "Watch on YouTube",
+        "tickets": "Tickets",
         "other": "Open link"
       }
     }

@@ -79,9 +79,19 @@
   color: var(--pindrop-text);
 }
 
+.trip-itinerary__stats {
+  margin: 0.85rem 0 0;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 0.8125rem;
+  color: #e2e8f0;
+}
+
+.trip-itinerary__block,
 .trip-itinerary__activity {
   display: grid;
-  grid-template-columns: 4rem 1fr;
+  grid-template-columns: 4.5rem 1fr;
   gap: 1rem;
 }
 
@@ -125,12 +135,79 @@
   color: #f8fafc;
 }
 
-.trip-itinerary__activity--food .trip-itinerary__title {
-  color: #6ee7b7;
+.trip-itinerary__activity--food .trip-itinerary__title,
+.trip-itinerary__block[data-kind='FOOD'] .trip-itinerary__title {
+  color: #fbbf24;
 }
 
-.trip-itinerary__activity--activity .trip-itinerary__title {
+.trip-itinerary__activity--activity .trip-itinerary__title,
+.trip-itinerary__block[data-kind='CITY_WALK'] .trip-itinerary__title {
+  color: #a5b4fc;
+}
+
+.trip-itinerary__block[data-kind='TREK'] .trip-itinerary__title {
+  color: #34d399;
+}
+
+.trip-itinerary__block[data-kind='MUSEUM'] .trip-itinerary__title {
   color: #93c5fd;
+}
+
+.trip-itinerary__block[data-kind='BEACH'] .trip-itinerary__title {
+  color: #5eead4;
+}
+
+.trip-itinerary__block[data-kind='CAMP'] .trip-itinerary__title {
+  color: #cbd5e1;
+}
+
+.trip-itinerary__block[data-kind='EVENING'] .trip-itinerary__title {
+  color: #c4b5fd;
+}
+
+.trip-itinerary__block[data-kind='TRANSIT'] .trip-itinerary__title,
+.trip-itinerary__block[data-kind='ARRIVAL'] .trip-itinerary__title,
+.trip-itinerary__block[data-kind='REST'] .trip-itinerary__title {
+  color: #e2e8f0;
+}
+
+.trip-itinerary__pins {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trip-itinerary__pins li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.65rem;
+  background: rgb(15 23 42 / 70%);
+  border: 1px solid rgb(42 52 65 / 80%);
+}
+
+.trip-itinerary__pin-role {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pindrop-text-muted);
+}
+
+.trip-itinerary__pin-name {
+  font-weight: 600;
+}
+
+.trip-itinerary__pin-address,
+.trip-itinerary__pin-cost {
+  font-size: 0.8125rem;
+  color: var(--pindrop-text-muted);
+}
+
+.trip-itinerary__pins a {
+  color: #6ee7b7;
+  font-size: 0.8125rem;
 }
 
 .trip-itinerary__visit-meta {

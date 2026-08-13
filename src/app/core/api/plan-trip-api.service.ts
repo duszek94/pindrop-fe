@@ -4,9 +4,11 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import type {
+  DayPlan,
   ExpandAction,
   InterestSuggestion,
   ItineraryActivity,
+  ItineraryDaySummary,
   PlaceResult,
   PreferenceProfile,
   ProposalType,
@@ -87,6 +89,18 @@ export class PlanTripApiService {
   getItinerary(tripId: number, day?: number): Observable<TripItinerary> {
     const options = day != null ? { params: { day: String(day) } } : {};
     return this.http.get<TripItinerary>(`${this.baseUrl}/trips/${tripId}/itinerary`, options);
+  }
+
+  listDayPlans(tripId: number): Observable<ItineraryDaySummary[]> {
+    return this.http.get<ItineraryDaySummary[]>(`${this.baseUrl}/trips/${tripId}/days`);
+  }
+
+  getDayPlan(tripId: number, day: number): Observable<DayPlan> {
+    return this.http.get<DayPlan>(`${this.baseUrl}/trips/${tripId}/days/${day}`);
+  }
+
+  regenerateDay(tripId: number, day: number): Observable<DayPlan> {
+    return this.http.post<DayPlan>(`${this.baseUrl}/trips/${tripId}/days/${day}/regenerate`, null);
   }
 
   regenerateActivity(tripId: number, activityId: number): Observable<TripItinerary> {
