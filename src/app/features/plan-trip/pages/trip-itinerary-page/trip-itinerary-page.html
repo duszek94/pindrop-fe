@@ -46,21 +46,23 @@
     }
 
     <div class="trip-itinerary__timeline">
-      @for (activity of data.activities; track activity.id) {
+      @for (activity of visibleActivities(); track activity.id) {
         <article
           class="trip-itinerary__activity"
           [class.trip-itinerary__activity--optional]="activity.optional"
           [class.trip-itinerary__activity--tip]="activity.slotKind === 'TIP'"
+          [class.trip-itinerary__activity--food]="activity.type === 'FOOD'"
+          [class.trip-itinerary__activity--activity]="activity.type === 'ACTIVITY'"
         >
           <span class="trip-itinerary__time">{{ formatActivityTime(activity) }}</span>
           <div class="trip-itinerary__body">
             <p class="trip-itinerary__meta">
-              @if (activity.slotKind) {
-                <span class="trip-itinerary__slot">{{ activity.slotKind }}</span>
+              <span class="trip-itinerary__time-type">{{ activity.type }}</span>
+              @if (activity.slotKind === 'OPTIONAL' || activity.optional) {
+                <span class="trip-itinerary__backup">{{ 'planTrip.itinerary.backupHint' | translate }}</span>
               }
-              <span class="trip-itinerary__type">{{ activity.type }}</span>
             </p>
-            <h3>{{ activity.title }}</h3>
+            <h3 class="trip-itinerary__title">{{ activity.title }}</h3>
             @if (visitMeta(activity); as visitMeta) {
               <p class="trip-itinerary__visit-meta">
                 @if (activity.visitStyle === 'SELF_GUIDED') {
@@ -69,19 +71,22 @@
                 {{ visitMeta }}
               </p>
             }
+            @if (activity.formattedAddress && activity.visitStyle !== 'SELF_GUIDED') {
+              <p class="trip-itinerary__address">{{ activity.formattedAddress }}</p>
+            }
             @if (shouldShowPhoto(activity)) {
               <img
                 class="trip-itinerary__photo"
                 [src]="activity.photoUrl"
                 [alt]="activity.placeName || activity.title"
                 loading="lazy"
-                (error)="activity.photoConfidence = 'NONE'"
+                (error)="hideBrokenPhoto(activity)"
               />
             }
             @if (activity.why) {
               <p class="trip-itinerary__why">{{ activity.why }}</p>
             }
-            <p>{{ activity.description }}</p>
+            <p class="trip-itinerary__description">{{ activity.description }}</p>
             @if (activity.tips?.length) {
               <ul class="trip-itinerary__tips">
                 @for (tip of activity.tips; track tip) {

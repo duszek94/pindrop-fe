@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { catchError, finalize, of } from 'rxjs';
@@ -26,6 +26,28 @@ export class TripItineraryPage implements OnInit {
   protected readonly selectedDay = this.store.selectedDay;
   protected readonly loading = this.store.loading;
   protected readonly error = this.store.error;
+
+  /** Hide thin generic tip slots when the day already has concrete venues. */
+  protected readonly visibleActivities = computed(() => {
+    const activities = this.itinerary()?.activities ?? [];
+    const hasConcrete = activities.some(
+      (a) =>
+        (a.type === 'ACTIVITY' || a.type === 'FOOD') &&
+        a.slotKind !== 'TIP' &&
+        !!a.placeName &&
+        a.placeName.trim().length > 0,
+    );
+    if (!hasConcrete) {
+      return activities;
+    }
+    return activities.filter((a) => {
+      if (a.slotKind !== 'TIP') {
+        return true;
+      }
+      const title = (a.title ?? '').toLowerCase();
+      return !title.includes('check in and orient') && !title.includes('neighborhood walk');
+    });
+  });
 
   ngOnInit(): void {
     const tripId = Number(this.route.snapshot.paramMap.get('tripId'));
@@ -66,6 +88,11 @@ export class TripItineraryPage implements OnInit {
 
   protected shouldShowPhoto(activity: ItineraryActivity): boolean {
     return !!activity.photoUrl && activity.photoConfidence === 'HIGH';
+  }
+
+  protected hideBrokenPhoto(activity: ItineraryActivity): void {
+    activity.photoConfidence = 'NONE';
+    activity.photoUrl = null;
   }
 
   protected externalLinkLabel(type: ExternalLinkType): string {

@@ -329,6 +329,8 @@
       "costBreakdown": "Szacunkowe koszty",
       "costDisclaimer": "Estymaty AI — niezweryfikowane ceny. Rzeczywiste koszty mogą się różnić.",
       "totalRange": "{{min}}–{{max}} {{currency}}",
+      "craftingTitle": "Tworzymy Twój plan dzień po dniu…",
+      "craftingSubtitle": "Budujemy konkretny itinerary z miejscami, trasami i kosztami.",
       "breakdown": {
         "accommodation": "Noclegi",
         "food": "Jedzenie",
@@ -342,7 +344,8 @@
     },
     "itinerary": {
       "selfGuided": "Zwiedzanie samodzielne",
-      "dayTotal": "Suma dnia {{day}}",
+      "dayTotal": "SUMA DNIA {{day}}",
+      "backupHint": "Gdy pełno / deszcz",
       "links": {
         "allTrails": "Zobacz w AllTrails",
         "wikiloc": "Zobacz w Wikiloc",

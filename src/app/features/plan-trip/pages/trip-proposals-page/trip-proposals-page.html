@@ -203,4 +203,25 @@
       </button>
     </div>
   </footer>
+
+  @if (loading()) {
+    <div
+      class="trip-proposals__crafting-overlay"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="trip-proposals__crafting-loader">
+        <div class="trip-proposals__crafting-visual" aria-hidden="true">
+          <span class="trip-proposals__crafting-ring trip-proposals__crafting-ring--outer"></span>
+          <span class="trip-proposals__crafting-ring trip-proposals__crafting-ring--inner"></span>
+          <span class="trip-proposals__crafting-icon">
+            <i class="pi pi-sparkles"></i>
+          </span>
+        </div>
+        <p class="trip-proposals__crafting-title">{{ 'planTrip.proposals.craftingTitle' | translate }}</p>
+        <p class="trip-proposals__crafting-subtitle">{{ 'planTrip.proposals.craftingSubtitle' | translate }}</p>
+      </div>
+    </div>
+  }
 </div>

@@ -372,6 +372,8 @@
       "costBreakdown": "Estimated costs",
       "costDisclaimer": "AI-generated estimates — not verified prices. Actual costs may vary.",
       "totalRange": "{{min}}–{{max}} {{currency}}",
+      "craftingTitle": "Crafting your day-by-day plan…",
+      "craftingSubtitle": "Building a concrete itinerary with venues, routes, and costs.",
       "breakdown": {
         "accommodation": "Accommodation",
         "food": "Food",
@@ -385,7 +387,8 @@
     },
     "itinerary": {
       "selfGuided": "Self-guided",
-      "dayTotal": "Day {{day}} total",
+      "dayTotal": "DAY {{day}} TOTAL",
+      "backupHint": "If full / rainy",
       "links": {
         "allTrails": "View on AllTrails",
         "wikiloc": "View on Wikiloc",
