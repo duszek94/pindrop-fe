@@ -3,20 +3,10 @@
     <header class="trip-itinerary__header">
       <button type="button" class="trip-itinerary__back" (click)="back()">
         <i class="pi pi-angle-left" aria-hidden="true"></i>
-        Back
+        {{ 'planTrip.itinerary.back' | translate }}
       </button>
       <h1>{{ data.title }}</h1>
       <p class="trip-itinerary__subtitle">{{ data.destination }} · {{ data.selectedProposalType }}</p>
-      @if (data.selectedDayRole || data.selectedActivityDomain) {
-        <p class="trip-itinerary__taxonomy">
-          @if (data.selectedDayRole) {
-            <span class="trip-itinerary__badge">{{ formatLabel(data.selectedDayRole) }}</span>
-          }
-          @if (data.selectedActivityDomain) {
-            <span class="trip-itinerary__badge trip-itinerary__badge--domain">{{ formatLabel(data.selectedActivityDomain) }}</span>
-          }
-        </p>
-      }
     </header>
 
     <div class="trip-itinerary__days">
@@ -27,133 +17,119 @@
           [class.trip-itinerary__day--active]="selectedDay() === day.dayNumber"
           (click)="selectDay(day.dayNumber)"
         >
-          Day {{ day.dayNumber }}
+          {{ 'planTrip.itinerary.dayChip' | translate: { day: day.dayNumber } }}
           <span>{{ day.date | date: 'MMM d' }}</span>
         </button>
       }
     </div>
 
-    @if (selectedDaySummary(); as day) {
+    @if (dayPlan(); as plan) {
       <section class="trip-itinerary__day-hero">
-        <h2>Day {{ day.dayNumber }} · {{ day.date | date: 'EEEE' }}</h2>
-        @if (day.themeKeywords) {
-          <p class="trip-itinerary__day-theme">{{ day.themeKeywords }}</p>
+        <h2>{{ 'planTrip.itinerary.dayTitle' | translate: { day: plan.dayNumber } }} · {{ plan.date | date: 'EEEE' }}</h2>
+        @if (plan.themes.length) {
+          <p class="trip-itinerary__day-theme">{{ plan.themes.join(' · ') }}</p>
         }
-        @if (day.daySummary) {
-          <p class="trip-itinerary__day-summary">{{ day.daySummary }}</p>
-        }
-      </section>
-    }
-
-    <div class="trip-itinerary__timeline">
-      @for (activity of data.activities; track activity.id) {
-        <article
-          class="trip-itinerary__activity"
-          [class.trip-itinerary__activity--optional]="activity.optional"
-          [class.trip-itinerary__activity--tip]="activity.slotKind === 'TIP'"
-        >
-          <span class="trip-itinerary__time">{{ formatActivityTime(activity) }}</span>
-          <div class="trip-itinerary__body">
-            <p class="trip-itinerary__meta">
-              @if (activity.slotKind) {
-                <span class="trip-itinerary__slot">{{ activity.slotKind }}</span>
-              }
-              <span class="trip-itinerary__type">{{ activity.type }}</span>
-            </p>
-            <h3>{{ activity.title }}</h3>
-            @if (visitMeta(activity); as visitMeta) {
-              <p class="trip-itinerary__visit-meta">
-                @if (activity.visitStyle === 'SELF_GUIDED') {
-                  <strong>{{ 'planTrip.itinerary.selfGuided' | translate }}</strong>:
-                }
-                {{ visitMeta }}
-              </p>
-            }
-            @if (shouldShowPhoto(activity)) {
-              <img
-                class="trip-itinerary__photo"
-                [src]="activity.photoUrl"
-                [alt]="activity.placeName || activity.title"
-                loading="lazy"
-                (error)="activity.photoConfidence = 'NONE'"
-              />
-            }
-            @if (activity.why) {
-              <p class="trip-itinerary__why">{{ activity.why }}</p>
-            }
-            <p>{{ activity.description }}</p>
-            @if (activity.tips?.length) {
-              <ul class="trip-itinerary__tips">
-                @for (tip of activity.tips; track tip) {
-                  <li><i class="pi pi-lightbulb" aria-hidden="true"></i> {{ tip }}</li>
-                }
-              </ul>
-            }
-            @if (activity.costLabel || activity.costMin != null || activity.costMax != null) {
-              <p class="trip-itinerary__cost">
-                {{ activity.costLabel || ('€' + activity.costMin + '–' + activity.costMax) }}
-              </p>
-            }
-            @if (activity.optionalAddons) {
-              <p class="trip-itinerary__addons">{{ activity.optionalAddons }}</p>
-            }
-            @if (activity.placeName) {
-              <p class="trip-itinerary__place">
-                {{ activity.placeName }}
-                @if (activity.rating != null) {
-                  <span> · {{ activity.rating }}★</span>
-                }
-                @if (activity.mapsUrl) {
-                  <a [href]="activity.mapsUrl" target="_blank" rel="noopener">{{ 'planTrip.itinerary.links.maps' | translate }}</a>
-                }
-              </p>
-            }
-            @if (activity.externalLinks?.length) {
-              <ul class="trip-itinerary__sources">
-                @for (link of activity.externalLinks; track link.url) {
-                  <li>
-                    <a [href]="link.url" target="_blank" rel="noopener">
-                      {{ externalLinkLabel(link.type) | translate }}
-                    </a>
-                  </li>
-                }
-              </ul>
-            } @else if (activity.sources?.length) {
-              <ul class="trip-itinerary__sources">
-                @for (source of activity.sources; track source) {
-                  <li><a [href]="source" target="_blank" rel="noopener">{{ 'planTrip.itinerary.links.article' | translate }}</a></li>
-                }
-              </ul>
-            }
-            @if (activity.tempC != null) {
-              <span class="trip-itinerary__weather">{{ activity.tempC }}°C</span>
-            }
-            @if (activity.optional && activity.expandAction) {
-              <button type="button" class="trip-itinerary__expand" (click)="expandActivity(activity.id)">
-                <i class="pi pi-sparkles" aria-hidden="true"></i>
-                {{ expandLabel(activity.expandAction) }}
-              </button>
-            } @else {
-              <button type="button" class="trip-itinerary__regen" (click)="regenerateActivity(activity.id)">
-                <i class="pi pi-refresh" aria-hidden="true"></i>
-                Refresh this slot
-              </button>
+        @if (playbookKinds().length) {
+          <div class="trip-itinerary__taxonomy">
+            @for (kind of playbookKinds(); track kind) {
+              <span class="trip-itinerary__badge" [attr.data-kind]="kind">{{ kindLabelKey(kind) | translate }}</span>
             }
           </div>
-        </article>
-      }
-    </div>
+        }
+        @if (plan.narrative) {
+          <p class="trip-itinerary__day-summary">{{ plan.narrative }}</p>
+        }
+        @if (statsLine(); as stats) {
+          <p class="trip-itinerary__stats">{{ stats }}</p>
+        }
+      </section>
 
-    @if (selectedDaySummary(); as day) {
-      @if (day.dailyDistanceLabel || day.dailyCostMin != null || day.dailyCostMax != null) {
+      @if (mapPins().length > 1) {
+        <app-day-minimap [pins]="mapPins()" />
+      }
+
+      <div class="trip-itinerary__timeline">
+        @for (block of plan.blocks; track block.id ?? $index) {
+          <article class="trip-itinerary__block" [attr.data-kind]="block.kind">
+            <span class="trip-itinerary__time">{{ formatBlockTime(block) }}</span>
+            <div class="trip-itinerary__body">
+              <p class="trip-itinerary__meta">
+                <span class="trip-itinerary__time-type">{{ formatBlockTime(block) }} · {{ kindLabelKey(block.kind) | translate }}</span>
+              </p>
+              <h3 class="trip-itinerary__title">{{ block.title }}</h3>
+              @if (expectedPins(block.kind).length) {
+                <p class="trip-itinerary__playbook-hint">
+                  {{ expectedPins(block.kind).join(' · ') }}
+                </p>
+              }
+              @if (block.routeSummary) {
+                <p class="trip-itinerary__visit-meta">{{ block.routeSummary }}</p>
+              }
+              @if (block.links.length) {
+                <ul class="trip-itinerary__sources">
+                  @for (link of block.links; track link.url) {
+                    <li>
+                      <a [href]="link.url" target="_blank" rel="noopener">
+                        {{ link.label || (externalLinkLabel(link.type) | translate) }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+              @if (shouldShowPhoto(block)) {
+                <img
+                  class="trip-itinerary__photo"
+                  [src]="block.photoUrl"
+                  [alt]="block.title"
+                  loading="lazy"
+                  (error)="hideBrokenPhoto(block)"
+                />
+              }
+              @if (block.narrative) {
+                <p class="trip-itinerary__description">{{ block.narrative }}</p>
+              }
+              @if (block.logistics) {
+                <p class="trip-itinerary__why">{{ block.logistics }}</p>
+              }
+              @if (block.pins.length) {
+                <ul class="trip-itinerary__pins">
+                  @for (pin of block.pins; track pin.name + (pin.mapsUrl ?? '')) {
+                    <li>
+                      <span class="trip-itinerary__pin-role">{{ roleLabelKey(pin.role) | translate }}</span>
+                      <span class="trip-itinerary__pin-name">{{ pin.name }}</span>
+                      @if (pin.address) {
+                        <span class="trip-itinerary__pin-address">{{ pin.address }}</span>
+                      }
+                      @if (pin.costLabel) {
+                        <span class="trip-itinerary__pin-cost">{{ pin.costLabel }}</span>
+                      }
+                      @if (pin.mapsUrl) {
+                        <a [href]="pin.mapsUrl" target="_blank" rel="noopener">{{ 'planTrip.itinerary.links.maps' | translate }}</a>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+              @if (block.costLabel || (block.costMin !== null && block.costMin !== undefined)) {
+                <p class="trip-itinerary__cost">
+                  {{ block.costLabel || ('€' + block.costMin + '–' + block.costMax) }}
+                </p>
+              }
+              @if (block.alternatives.length) {
+                <p class="trip-itinerary__backup">{{ 'planTrip.itinerary.backupHint' | translate }}</p>
+                @for (alt of block.alternatives; track alt.title) {
+                  <p class="trip-itinerary__addons">{{ alt.title }} — {{ alt.narrative }}</p>
+                }
+              }
+            </div>
+          </article>
+        }
+      </div>
+
+      @if (statsLine(); as stats) {
         <p class="trip-itinerary__day-total">
-          {{ 'planTrip.itinerary.dayTotal' | translate: { day: day.dayNumber } }}:
-          @if (day.dailyDistanceLabel) {
-            <span>{{ day.dailyDistanceLabel }}</span>
-          }
-          @if (day.dailyCostMin != null && day.dailyCostMax != null) {
-            <span> · €{{ day.dailyCostMin }}–{{ day.dailyCostMax }}</span>
-          }
+          {{ 'planTrip.itinerary.dayTotal' | translate: { day: plan.dayNumber } }}:
+          <span>{{ stats }}</span>
         </p>
       }
     }
@@ -164,9 +140,9 @@
           type="button"
           class="trip-itinerary__cta trip-itinerary__cta--secondary"
           [disabled]="loading()"
-          (click)="regenerateAll()"
+          (click)="regenerateDay()"
         >
-          Regenerate
+          {{ 'planTrip.itinerary.regenerateDay' | translate }}
         </button>
         <button
           type="button"
@@ -174,13 +150,13 @@
           [disabled]="loading()"
           (click)="saveTrip()"
         >
-          Save Trip
+          {{ 'planTrip.itinerary.saveTrip' | translate }}
         </button>
       </div>
     </footer>
   </div>
 } @else if (loading()) {
-  <p class="trip-itinerary__loading">Loading itinerary...</p>
+  <p class="trip-itinerary__loading">{{ 'planTrip.itinerary.loading' | translate }}</p>
 }
 
 @if (error()) {

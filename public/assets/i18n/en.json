@@ -372,6 +372,8 @@
       "costBreakdown": "Estimated costs",
       "costDisclaimer": "AI-generated estimates — not verified prices. Actual costs may vary.",
       "totalRange": "{{min}}–{{max}} {{currency}}",
+      "craftingTitle": "Crafting your day-by-day plan…",
+      "craftingSubtitle": "Building a concrete itinerary with venues, routes, and costs.",
       "breakdown": {
         "accommodation": "Accommodation",
         "food": "Food",
@@ -384,13 +386,48 @@
       }
     },
     "itinerary": {
+      "back": "Back",
+      "loading": "Loading itinerary...",
+      "dayChip": "Day {{day}}",
+      "dayTitle": "Day {{day}}",
       "selfGuided": "Self-guided",
-      "dayTotal": "Day {{day}} total",
+      "dayTotal": "DAY {{day}} TOTAL",
+      "backupHint": "Shorter route / rainy backup",
+      "regenerateDay": "Regenerate day",
+      "saveTrip": "Save Trip",
+      "playbooks": {
+        "TREK": "Trek",
+        "CITY_WALK": "City walk",
+        "MUSEUM": "Museum",
+        "BEACH": "Beach",
+        "CAMP": "Camp",
+        "FOOD": "Food",
+        "TRANSIT": "Transit",
+        "EVENING": "Evening",
+        "REST": "Rest",
+        "ARRIVAL": "Arrival"
+      },
+      "pinRoles": {
+        "PARKING": "Parking",
+        "TRAILHEAD": "Trailhead",
+        "VIEWPOINT": "Viewpoint",
+        "HUT": "Hut",
+        "RESTAURANT": "Restaurant",
+        "SHOP": "Shop",
+        "BEACH": "Beach",
+        "MUSEUM": "Museum",
+        "CAMP": "Camp",
+        "LODGING": "Lodging",
+        "STOP": "Stop",
+        "OTHER": "Pin"
+      },
       "links": {
         "allTrails": "View on AllTrails",
         "wikiloc": "View on Wikiloc",
         "article": "Read article",
         "maps": "Open in Maps",
+        "youtube": "Watch on YouTube",
+        "tickets": "Tickets",
         "other": "Open link"
       }
     }

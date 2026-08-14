@@ -96,7 +96,92 @@ export type VisitStyle = 'SELF_GUIDED' | 'GUIDED' | 'RESERVATION' | 'WALK_IN';
 
 export type PhotoConfidence = 'HIGH' | 'LOW' | 'NONE';
 
-export type ExternalLinkType = 'ALLTRAILS' | 'WIKILOC' | 'ARTICLE' | 'MAPS' | 'OTHER';
+export type ExternalLinkType = 'ALLTRAILS' | 'WIKILOC' | 'ARTICLE' | 'MAPS' | 'YOUTUBE' | 'TICKETS' | 'OTHER';
+
+export type DayBlockKind =
+  | 'TREK'
+  | 'CITY_WALK'
+  | 'MUSEUM'
+  | 'BEACH'
+  | 'CAMP'
+  | 'FOOD'
+  | 'TRANSIT'
+  | 'EVENING'
+  | 'REST'
+  | 'ARRIVAL';
+
+export type DayPinRole =
+  | 'PARKING'
+  | 'TRAILHEAD'
+  | 'VIEWPOINT'
+  | 'HUT'
+  | 'RESTAURANT'
+  | 'SHOP'
+  | 'BEACH'
+  | 'MUSEUM'
+  | 'CAMP'
+  | 'LODGING'
+  | 'STOP'
+  | 'OTHER';
+
+export interface DayPin {
+  id?: number | null;
+  name: string;
+  role: DayPinRole;
+  lat?: number | null;
+  lng?: number | null;
+  placeId?: string | null;
+  mapsUrl?: string | null;
+  address?: string | null;
+  costLabel?: string | null;
+}
+
+export interface DayBlockLink {
+  type: ExternalLinkType;
+  url: string;
+  label: string;
+}
+
+export interface DayBlock {
+  id?: number | null;
+  kind: DayBlockKind;
+  startTime: string;
+  endTime?: string | null;
+  flexibility?: TimeFlexibility | null;
+  title: string;
+  narrative: string;
+  logistics?: string | null;
+  costLabel?: string | null;
+  costMin?: number | null;
+  costMax?: number | null;
+  photoUrl?: string | null;
+  photoConfidence?: PhotoConfidence | null;
+  routeSummary?: string | null;
+  links: DayBlockLink[];
+  pins: DayPin[];
+  alternatives: DayBlock[];
+}
+
+export interface DayPlanStats {
+  distanceKm?: number | null;
+  durationLabel?: string | null;
+  elevationM?: number | null;
+  costMin?: number | null;
+  costMax?: number | null;
+  currency?: string | null;
+}
+
+export interface DayPlan {
+  dayNumber: number;
+  date: string;
+  title?: string | null;
+  narrative?: string | null;
+  themes: string[];
+  dayRole?: DayRole | null;
+  activityDomain?: ActivityDomain | null;
+  stats: DayPlanStats;
+  blocks: DayBlock[];
+}
 
 export interface RouteWaypoint {
   name: string;
@@ -388,6 +473,12 @@ export interface TripItinerary {
   selectedDayRole?: DayRole | null;
 
   selectedActivityDomain?: ActivityDomain | null;
+
+  dayPlan?: DayPlan | null;
+
+  lat?: number | null;
+
+  lng?: number | null;
 
 }
 

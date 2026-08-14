@@ -1,17 +1,20 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, finalize, of, switchMap } from 'rxjs';
 
 import { PlanTripApiService } from '../../../../core/api/plan-trip-api.service';
-import type { ExpandAction, ExternalLinkType, ItineraryActivity, ItineraryDaySummary } from '../../../../core/models/plan-trip.models';
+import type { DayBlock, DayBlockKind, DayPin, ExternalLinkType } from '../../../../core/models/plan-trip.models';
 import { DashboardStore } from '../../../dashboard/services/dashboard.store';
+import { DayMinimapComponent } from '../../components/day-minimap/day-minimap';
 import { PlanTripStore } from '../../services/plan-trip.store';
+import { pinRoleLabelKey, playbookLabelKey, toDayPlan } from '../../utils/day-plan.mapper';
+import { DAY_PLAYBOOKS } from '../../data/day-playbooks';
 
 @Component({
   selector: 'app-trip-itinerary-page',
-  imports: [DatePipe, TranslatePipe],
+  imports: [DatePipe, TranslatePipe, DayMinimapComponent],
   templateUrl: './trip-itinerary-page.html',
   styleUrl: './trip-itinerary-page.scss',
 })
@@ -26,6 +29,18 @@ export class TripItineraryPage implements OnInit {
   protected readonly selectedDay = this.store.selectedDay;
   protected readonly loading = this.store.loading;
   protected readonly error = this.store.error;
+
+  protected readonly dayPlan = computed(() => {
+    const itinerary = this.itinerary();
+    if (!itinerary) {
+      return null;
+    }
+    return toDayPlan(itinerary, this.selectedDay());
+  });
+
+  protected readonly mapPins = computed(() => {
+    return (this.dayPlan()?.blocks ?? []).flatMap((block) => block.pins).filter((pin) => pin.lat != null && pin.lng != null);
+  });
 
   ngOnInit(): void {
     const tripId = Number(this.route.snapshot.paramMap.get('tripId'));
@@ -42,30 +57,40 @@ export class TripItineraryPage implements OnInit {
     return value.replaceAll('_', ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  protected formatActivityTime(activity: ItineraryActivity): string {
-    const start = activity.startTime?.slice(0, 5) ?? '';
-    if (activity.timeFlexibility === 'FLEXIBLE' || activity.timeFlexibility === 'WINDOW') {
+  protected formatBlockTime(block: DayBlock): string {
+    const start = block.startTime?.slice(0, 5) ?? '';
+    if (block.flexibility === 'FLEXIBLE' || block.flexibility === 'WINDOW') {
       return `~${start}`;
     }
-    if (activity.endTime) {
-      return `${start}–${activity.endTime.slice(0, 5)}`;
+    if (block.endTime) {
+      return `${start}–${block.endTime.slice(0, 5)}`;
     }
     return start;
   }
 
-  protected selectedDaySummary(): ItineraryDaySummary | undefined {
-    return this.itinerary()?.days.find((day) => day.dayNumber === this.selectedDay());
+  protected kindLabelKey(kind: DayBlockKind): string {
+    return playbookLabelKey(kind);
   }
 
-  protected visitMeta(activity: ItineraryActivity): string | null {
-    if (activity.visitStyle === 'SELF_GUIDED' && activity.routeSummary) {
-      return activity.routeSummary;
-    }
-    return activity.formattedAddress ?? null;
+  protected roleLabelKey(role: DayPin['role']): string {
+    return pinRoleLabelKey(role);
   }
 
-  protected shouldShowPhoto(activity: ItineraryActivity): boolean {
-    return !!activity.photoUrl && activity.photoConfidence === 'HIGH';
+  protected playbookKinds(): DayBlockKind[] {
+    return [...new Set((this.dayPlan()?.blocks ?? []).map((block) => block.kind))];
+  }
+
+  protected expectedPins(kind: DayBlockKind): string[] {
+    return DAY_PLAYBOOKS[kind]?.expectedPins ?? [];
+  }
+
+  protected shouldShowPhoto(block: DayBlock): boolean {
+    return !!block.photoUrl && block.photoConfidence === 'HIGH';
+  }
+
+  protected hideBrokenPhoto(block: DayBlock): void {
+    block.photoConfidence = 'NONE';
+    block.photoUrl = null;
   }
 
   protected externalLinkLabel(type: ExternalLinkType): string {
@@ -74,23 +99,32 @@ export class TripItineraryPage implements OnInit {
       WIKILOC: 'planTrip.itinerary.links.wikiloc',
       ARTICLE: 'planTrip.itinerary.links.article',
       MAPS: 'planTrip.itinerary.links.maps',
+      YOUTUBE: 'planTrip.itinerary.links.youtube',
+      TICKETS: 'planTrip.itinerary.links.tickets',
       OTHER: 'planTrip.itinerary.links.other',
     };
     return labels[type] ?? labels.OTHER;
   }
 
-  protected expandLabel(action: ExpandAction): string {
-    const labels: Record<ExpandAction, string> = {
-      EVENING_NEIGHBORHOOD_WALK: 'Generate evening walk',
-      NIGHTLIFE_OPTIONS: 'Find nightlife options',
-      RECOVERY_SPA: 'Find spa & recovery',
-      FAMILY_ACTIVITY: 'Find family activities',
-      FOOD_CRAWL: 'Plan food crawl',
-      WEATHER_PLAN_B: 'Show rainy-day plan B',
-      PHOTO_GOLDEN_HOUR: 'Plan golden hour route',
-      LOCAL_EXPERIENCE: 'Find local experience',
-    };
-    return labels[action] ?? 'Generate ideas';
+  protected statsLine(): string | null {
+    const plan = this.dayPlan();
+    if (!plan) {
+      return null;
+    }
+    const parts: string[] = [];
+    if (plan.stats.durationLabel) {
+      parts.push(plan.stats.durationLabel);
+    }
+    if (plan.stats.distanceKm != null) {
+      parts.push(`~${plan.stats.distanceKm} km`);
+    }
+    if (plan.stats.elevationM != null) {
+      parts.push(`+${plan.stats.elevationM} m`);
+    }
+    if (plan.stats.costMin != null && plan.stats.costMax != null) {
+      parts.push(`€${plan.stats.costMin}–${plan.stats.costMax}`);
+    }
+    return parts.length ? parts.join(' · ') : null;
   }
 
   protected selectDay(dayNumber: number): void {
@@ -98,47 +132,30 @@ export class TripItineraryPage implements OnInit {
     this.loadDay(tripId, dayNumber);
   }
 
-  protected expandActivity(activityId: number): void {
-    const tripId = Number(this.route.snapshot.paramMap.get('tripId'));
-    this.store.loading.set(true);
-    this.planTripApi
-      .expandActivity(tripId, activityId)
-      .pipe(finalize(() => this.store.loading.set(false)))
-      .subscribe({
-        next: () => this.loadDay(tripId, this.selectedDay()),
-        error: () => this.store.error.set('Failed to expand activity.'),
-      });
-  }
-
-  protected regenerateActivity(activityId: number): void {
-    const tripId = Number(this.route.snapshot.paramMap.get('tripId'));
-    this.store.loading.set(true);
-    this.planTripApi
-      .regenerateActivity(tripId, activityId)
-      .pipe(finalize(() => this.store.loading.set(false)))
-      .subscribe({
-        next: (itinerary) => this.store.itinerary.set(itinerary),
-        error: () => this.store.error.set('Failed to regenerate activity.'),
-      });
-  }
-
-  protected regenerateAll(): void {
+  protected regenerateDay(): void {
     const tripId = Number(this.route.snapshot.paramMap.get('tripId'));
     const day = this.selectedDay();
     this.store.loading.set(true);
     this.planTripApi
-      .regenerateItinerary(tripId)
+      .regenerateDay(tripId, day)
       .pipe(
+        catchError(() =>
+          this.planTripApi.regenerateItinerary(tripId).pipe(
+            switchMap(() => this.planTripApi.getItinerary(tripId, day)),
+            switchMap((itinerary) => of(toDayPlan(itinerary, day))),
+          ),
+        ),
         finalize(() => this.store.loading.set(false)),
-        catchError(() => {
-          this.store.error.set('Failed to regenerate itinerary.');
-          return of(null);
-        }),
       )
-      .subscribe((result) => {
-        if (result) {
-          this.loadDay(tripId, day);
-        }
+      .subscribe({
+        next: () => this.loadDay(tripId, day),
+        error: (err: { status?: number; error?: { message?: string } }) => {
+          this.store.error.set(
+            err?.status === 422
+              ? (err.error?.message ?? 'Could not generate a specific day. Please regenerate.')
+              : 'Failed to regenerate day.',
+          );
+        },
       });
   }
 
@@ -165,7 +182,15 @@ export class TripItineraryPage implements OnInit {
     this.store.loading.set(true);
     this.planTripApi
       .getItinerary(tripId, day)
-      .pipe(finalize(() => this.store.loading.set(false)))
+      .pipe(
+        switchMap((itinerary) =>
+          this.planTripApi.getDayPlan(tripId, day).pipe(
+            catchError(() => of(null)),
+            switchMap((dayPlan) => of({ ...itinerary, dayPlan: dayPlan ?? itinerary.dayPlan ?? null })),
+          ),
+        ),
+        finalize(() => this.store.loading.set(false)),
+      )
       .subscribe({
         next: (itinerary) => {
           this.store.itinerary.set(itinerary);

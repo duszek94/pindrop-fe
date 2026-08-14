@@ -1,0 +1,3642 @@
+From 9952b1a4e70b9a5d6a8d5f079526d1e9286391ff Mon Sep 17 00:00:00 2001
+From: Cursor Agent <cursoragent@cursor.com>
+Date: Fri, 14 Aug 2026 11:21:25 +0000
+Subject: [PATCH] Add editorial day plans with Claude-first generation.
+
+Persist days as narrative blocks and unique pins, validate concreteness, enrich per pin via Places, and expose GET/POST /trips/{id}/days APIs. Light proposals no longer write template itinerary slots.
+---
+ settings.gradle                               |   4 +
+ .../duszek/pindrop/config/AppProperties.java  |   2 +
+ .../controller/TripPlanningController.java    |  21 +
+ .../dto/planning/DayBlockLinkResponse.java    |  20 +
+ .../dto/planning/DayBlockResponse.java        |  43 +++
+ .../pindrop/dto/planning/DayPinResponse.java  |  26 ++
+ .../pindrop/dto/planning/DayPlanResponse.java |  32 ++
+ .../dto/planning/DayPlanStatsResponse.java    |  22 ++
+ .../dto/planning/ItineraryDaySummary.java     |  12 +
+ .../dto/planning/TripItineraryResponse.java   |   5 +
+ .../duszek/pindrop/entity/DayBlockKind.java   |  14 +
+ .../com/duszek/pindrop/entity/DayPinRole.java |  16 +
+ .../com/duszek/pindrop/entity/DayRole.java    |  13 +
+ .../pindrop/entity/ExternalLinkType.java      |  11 +
+ .../pindrop/entity/PhotoConfidence.java       |   7 +
+ .../pindrop/entity/TimeFlexibility.java       |   7 +
+ .../duszek/pindrop/entity/TripDayBlock.java   | 115 ++++++
+ .../duszek/pindrop/entity/TripDayLink.java    |  44 +++
+ .../com/duszek/pindrop/entity/TripDayPin.java |  58 +++
+ .../duszek/pindrop/entity/TripDayPlan.java    | 100 +++++
+ .../exception/GlobalExceptionHandler.java     |   6 +
+ .../UnprocessableEntityException.java         |   8 +
+ .../provider/ai/TripPlanPromptBuilder.java    |   4 +-
+ .../ai/claude/AnthropicMessagesClient.java    | 125 ++++++
+ .../ai/claude/ClaudeTripPlanProvider.java     |  48 +++
+ .../dayplan/ClaudeFirstDayPlanProvider.java   |  67 ++++
+ .../provider/dayplan/DayPinEnricher.java      | 202 ++++++++++
+ .../provider/dayplan/DayPlanAiProvider.java   |   8 +
+ .../dayplan/DayPlanConcretenessValidator.java | 129 +++++++
+ .../provider/dayplan/DayPlanJsonParser.java   | 209 ++++++++++
+ .../provider/dayplan/DayPlaybooks.java        |  95 +++++
+ .../provider/dayplan/DeepDayPlanRequest.java  |  10 +
+ .../EditorialDayPlanPromptBuilder.java        |  87 +++++
+ .../dayplan/EditorialDayPlanStub.java         | 358 ++++++++++++++++++
+ .../provider/dayplan/GeneratedDayPlan.java    | 118 ++++++
+ .../provider/dayplan/PinMapsUrlBuilder.java   | 113 ++++++
+ .../provider/places/GooglePlacesClient.java   |  29 +-
+ .../provider/places/PlaceSearchResult.java    |  27 +-
+ .../repository/TripDayPlanRepository.java     |  23 ++
+ .../duszek/pindrop/service/DayPlanMapper.java | 179 +++++++++
+ .../pindrop/service/DayPlanService.java       | 118 ++++++
+ .../service/ItineraryGenerationService.java   |  84 ++--
+ .../service/PlaceLocalizationService.java     |   6 +-
+ .../service/PopularDestinationsService.java   |   3 +-
+ .../pindrop/service/TripPlanningService.java  |  21 +
+ src/main/resources/application.yml            |   2 +
+ .../db/migration/V9__editorial_day_plan.sql   |  70 ++++
+ .../provider/dayplan/DayPinEnricherTest.java  |  85 +++++
+ .../DayPlanConcretenessValidatorTest.java     |  87 +++++
+ .../dayplan/DayPlanJsonParserTest.java        |  27 ++
+ .../dayplan/EditorialDayPlanStubTest.java     |  64 ++++
+ .../dayplan/PinMapsUrlBuilderTest.java        |  42 ++
+ .../places/GooglePlacesClientTest.java        |   7 +
+ 53 files changed, 2971 insertions(+), 62 deletions(-)
+ create mode 100644 src/main/java/com/duszek/pindrop/dto/planning/DayBlockLinkResponse.java
+ create mode 100644 src/main/java/com/duszek/pindrop/dto/planning/DayBlockResponse.java
+ create mode 100644 src/main/java/com/duszek/pindrop/dto/planning/DayPinResponse.java
+ create mode 100644 src/main/java/com/duszek/pindrop/dto/planning/DayPlanResponse.java
+ create mode 100644 src/main/java/com/duszek/pindrop/dto/planning/DayPlanStatsResponse.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/DayBlockKind.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/DayPinRole.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/DayRole.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/ExternalLinkType.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/PhotoConfidence.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/TimeFlexibility.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/TripDayBlock.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/TripDayLink.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/TripDayPin.java
+ create mode 100644 src/main/java/com/duszek/pindrop/entity/TripDayPlan.java
+ create mode 100644 src/main/java/com/duszek/pindrop/exception/UnprocessableEntityException.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/ai/claude/AnthropicMessagesClient.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/ai/claude/ClaudeTripPlanProvider.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/ClaudeFirstDayPlanProvider.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/DayPinEnricher.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanAiProvider.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanConcretenessValidator.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanJsonParser.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/DayPlaybooks.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/DeepDayPlanRequest.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanPromptBuilder.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanStub.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/GeneratedDayPlan.java
+ create mode 100644 src/main/java/com/duszek/pindrop/provider/dayplan/PinMapsUrlBuilder.java
+ create mode 100644 src/main/java/com/duszek/pindrop/repository/TripDayPlanRepository.java
+ create mode 100644 src/main/java/com/duszek/pindrop/service/DayPlanMapper.java
+ create mode 100644 src/main/java/com/duszek/pindrop/service/DayPlanService.java
+ create mode 100644 src/main/resources/db/migration/V9__editorial_day_plan.sql
+ create mode 100644 src/test/java/com/duszek/pindrop/provider/dayplan/DayPinEnricherTest.java
+ create mode 100644 src/test/java/com/duszek/pindrop/provider/dayplan/DayPlanConcretenessValidatorTest.java
+ create mode 100644 src/test/java/com/duszek/pindrop/provider/dayplan/DayPlanJsonParserTest.java
+ create mode 100644 src/test/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanStubTest.java
+ create mode 100644 src/test/java/com/duszek/pindrop/provider/dayplan/PinMapsUrlBuilderTest.java
+
+diff --git a/settings.gradle b/settings.gradle
+index 93333e5..ca0e621 100644
+--- a/settings.gradle
++++ b/settings.gradle
+@@ -1 +1,5 @@
++plugins {
++	id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
++}
++
+ rootProject.name = 'pindrop'
+diff --git a/src/main/java/com/duszek/pindrop/config/AppProperties.java b/src/main/java/com/duszek/pindrop/config/AppProperties.java
+index 63534d4..d3ef386 100644
+--- a/src/main/java/com/duszek/pindrop/config/AppProperties.java
++++ b/src/main/java/com/duszek/pindrop/config/AppProperties.java
+@@ -21,6 +21,8 @@ public class AppProperties {
+ 		private String provider = "stub";
+ 		private String model = "gpt-4o";
+ 		private String apiKey = "";
++		private String anthropicApiKey = "";
++		private String anthropicModel = "claude-sonnet-4-20250514";
+ 		private String baseUrl = "http://localhost:11434";
+ 	}
+ 
+diff --git a/src/main/java/com/duszek/pindrop/controller/TripPlanningController.java b/src/main/java/com/duszek/pindrop/controller/TripPlanningController.java
+index 96d5f3f..a375650 100644
+--- a/src/main/java/com/duszek/pindrop/controller/TripPlanningController.java
++++ b/src/main/java/com/duszek/pindrop/controller/TripPlanningController.java
+@@ -1,6 +1,8 @@
+ package com.duszek.pindrop.controller;
+ 
++import com.duszek.pindrop.dto.planning.DayPlanResponse;
+ import com.duszek.pindrop.dto.planning.InterestSuggestionResponse;
++import com.duszek.pindrop.dto.planning.ItineraryDaySummary;
+ import com.duszek.pindrop.dto.planning.SelectProposalRequest;
+ import com.duszek.pindrop.dto.planning.TripItineraryResponse;
+ import com.duszek.pindrop.dto.planning.TripProposalResponse;
+@@ -81,6 +83,25 @@ public class TripPlanningController {
+ 		return tripPlanningService.getItinerary(SecurityUtils.getCurrentUserId(), tripId, day);
+ 	}
+ 
++	@GetMapping("/days")
++	public List<ItineraryDaySummary> listDays(@PathVariable Long tripId) {
++		return tripPlanningService.listDays(SecurityUtils.getCurrentUserId(), tripId);
++	}
++
++	@GetMapping("/days/{dayNumber}")
++	public DayPlanResponse getDayPlan(
++			@PathVariable Long tripId,
++			@PathVariable int dayNumber) {
++		return tripPlanningService.getDayPlan(SecurityUtils.getCurrentUserId(), tripId, dayNumber);
++	}
++
++	@PostMapping("/days/{dayNumber}/regenerate")
++	public DayPlanResponse regenerateDay(
++			@PathVariable Long tripId,
++			@PathVariable int dayNumber) {
++		return tripPlanningService.regenerateDay(SecurityUtils.getCurrentUserId(), tripId, dayNumber);
++	}
++
+ 	@PostMapping("/itinerary/activities/{activityId}/regenerate")
+ 	public TripItineraryResponse regenerateActivity(
+ 			@PathVariable Long tripId,
+diff --git a/src/main/java/com/duszek/pindrop/dto/planning/DayBlockLinkResponse.java b/src/main/java/com/duszek/pindrop/dto/planning/DayBlockLinkResponse.java
+new file mode 100644
+index 0000000..19545f6
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/dto/planning/DayBlockLinkResponse.java
+@@ -0,0 +1,20 @@
++package com.duszek.pindrop.dto.planning;
++
++import com.duszek.pindrop.entity.ExternalLinkType;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++
++@Getter
++@Setter
++@Builder
++@NoArgsConstructor
++@AllArgsConstructor
++public class DayBlockLinkResponse {
++
++	private ExternalLinkType type;
++	private String url;
++	private String label;
++}
+diff --git a/src/main/java/com/duszek/pindrop/dto/planning/DayBlockResponse.java b/src/main/java/com/duszek/pindrop/dto/planning/DayBlockResponse.java
+new file mode 100644
+index 0000000..e15b960
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/dto/planning/DayBlockResponse.java
+@@ -0,0 +1,43 @@
++package com.duszek.pindrop.dto.planning;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.PhotoConfidence;
++import com.duszek.pindrop.entity.TimeFlexibility;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++
++import java.time.LocalTime;
++import java.util.ArrayList;
++import java.util.List;
++
++@Getter
++@Setter
++@Builder
++@NoArgsConstructor
++@AllArgsConstructor
++public class DayBlockResponse {
++
++	private Long id;
++	private DayBlockKind kind;
++	private LocalTime startTime;
++	private LocalTime endTime;
++	private TimeFlexibility flexibility;
++	private String title;
++	private String narrative;
++	private String logistics;
++	private String costLabel;
++	private Integer costMin;
++	private Integer costMax;
++	private String photoUrl;
++	private PhotoConfidence photoConfidence;
++	private String routeSummary;
++	@Builder.Default
++	private List<DayBlockLinkResponse> links = new ArrayList<>();
++	@Builder.Default
++	private List<DayPinResponse> pins = new ArrayList<>();
++	@Builder.Default
++	private List<DayBlockResponse> alternatives = new ArrayList<>();
++}
+diff --git a/src/main/java/com/duszek/pindrop/dto/planning/DayPinResponse.java b/src/main/java/com/duszek/pindrop/dto/planning/DayPinResponse.java
+new file mode 100644
+index 0000000..4063937
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/dto/planning/DayPinResponse.java
+@@ -0,0 +1,26 @@
++package com.duszek.pindrop.dto.planning;
++
++import com.duszek.pindrop.entity.DayPinRole;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++
++@Getter
++@Setter
++@Builder
++@NoArgsConstructor
++@AllArgsConstructor
++public class DayPinResponse {
++
++	private Long id;
++	private String name;
++	private DayPinRole role;
++	private Double lat;
++	private Double lng;
++	private String placeId;
++	private String mapsUrl;
++	private String address;
++	private String costLabel;
++}
+diff --git a/src/main/java/com/duszek/pindrop/dto/planning/DayPlanResponse.java b/src/main/java/com/duszek/pindrop/dto/planning/DayPlanResponse.java
+new file mode 100644
+index 0000000..074aad7
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/dto/planning/DayPlanResponse.java
+@@ -0,0 +1,32 @@
++package com.duszek.pindrop.dto.planning;
++
++import com.duszek.pindrop.entity.DayRole;
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++
++import java.time.LocalDate;
++import java.util.ArrayList;
++import java.util.List;
++
++@Getter
++@Setter
++@Builder
++@NoArgsConstructor
++@AllArgsConstructor
++public class DayPlanResponse {
++
++	private int dayNumber;
++	private LocalDate date;
++	private String title;
++	private String narrative;
++	@Builder.Default
++	private List<String> themes = new ArrayList<>();
++	private DayRole dayRole;
++	private String activityDomain;
++	private DayPlanStatsResponse stats;
++	@Builder.Default
++	private List<DayBlockResponse> blocks = new ArrayList<>();
++}
+diff --git a/src/main/java/com/duszek/pindrop/dto/planning/DayPlanStatsResponse.java b/src/main/java/com/duszek/pindrop/dto/planning/DayPlanStatsResponse.java
+new file mode 100644
+index 0000000..9fab0c4
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/dto/planning/DayPlanStatsResponse.java
+@@ -0,0 +1,22 @@
++package com.duszek.pindrop.dto.planning;
++
++import lombok.AllArgsConstructor;
++import lombok.Builder;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++
++@Getter
++@Setter
++@Builder
++@NoArgsConstructor
++@AllArgsConstructor
++public class DayPlanStatsResponse {
++
++	private Double distanceKm;
++	private String durationLabel;
++	private Integer elevationM;
++	private Integer costMin;
++	private Integer costMax;
++	private String currency;
++}
+diff --git a/src/main/java/com/duszek/pindrop/dto/planning/ItineraryDaySummary.java b/src/main/java/com/duszek/pindrop/dto/planning/ItineraryDaySummary.java
+index 3627bcd..5e42515 100644
+--- a/src/main/java/com/duszek/pindrop/dto/planning/ItineraryDaySummary.java
++++ b/src/main/java/com/duszek/pindrop/dto/planning/ItineraryDaySummary.java
+@@ -15,4 +15,16 @@ public class ItineraryDaySummary {
+ 
+ 	private int dayNumber;
+ 	private LocalDate date;
++	private String dayRole;
++	private String activityDomain;
++	private String themeKeywords;
++	private String daySummary;
++	private Integer dailyCostMin;
++	private Integer dailyCostMax;
++	private String dailyDistanceLabel;
++
++	public ItineraryDaySummary(int dayNumber, LocalDate date) {
++		this.dayNumber = dayNumber;
++		this.date = date;
++	}
+ }
+diff --git a/src/main/java/com/duszek/pindrop/dto/planning/TripItineraryResponse.java b/src/main/java/com/duszek/pindrop/dto/planning/TripItineraryResponse.java
+index 6d54b15..2ccfeb9 100644
+--- a/src/main/java/com/duszek/pindrop/dto/planning/TripItineraryResponse.java
++++ b/src/main/java/com/duszek/pindrop/dto/planning/TripItineraryResponse.java
+@@ -24,4 +24,9 @@ public class TripItineraryResponse {
+ 	private int totalDays;
+ 	private List<ItineraryDaySummary> days;
+ 	private List<ItineraryActivityResponse> activities;
++	private String selectedDayRole;
++	private String selectedActivityDomain;
++	private DayPlanResponse dayPlan;
++	private Double lat;
++	private Double lng;
+ }
+diff --git a/src/main/java/com/duszek/pindrop/entity/DayBlockKind.java b/src/main/java/com/duszek/pindrop/entity/DayBlockKind.java
+new file mode 100644
+index 0000000..6f89753
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/DayBlockKind.java
+@@ -0,0 +1,14 @@
++package com.duszek.pindrop.entity;
++
++public enum DayBlockKind {
++	TREK,
++	CITY_WALK,
++	MUSEUM,
++	BEACH,
++	CAMP,
++	FOOD,
++	TRANSIT,
++	EVENING,
++	REST,
++	ARRIVAL
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/DayPinRole.java b/src/main/java/com/duszek/pindrop/entity/DayPinRole.java
+new file mode 100644
+index 0000000..9c8ca90
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/DayPinRole.java
+@@ -0,0 +1,16 @@
++package com.duszek.pindrop.entity;
++
++public enum DayPinRole {
++	PARKING,
++	TRAILHEAD,
++	VIEWPOINT,
++	HUT,
++	RESTAURANT,
++	SHOP,
++	BEACH,
++	MUSEUM,
++	CAMP,
++	LODGING,
++	STOP,
++	OTHER
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/DayRole.java b/src/main/java/com/duszek/pindrop/entity/DayRole.java
+new file mode 100644
+index 0000000..5aa7e41
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/DayRole.java
+@@ -0,0 +1,13 @@
++package com.duszek.pindrop.entity;
++
++public enum DayRole {
++	ARRIVAL,
++	DEPARTURE,
++	MOVE,
++	EXPLORE,
++	EXCURSION,
++	RELAX,
++	RECOVERY,
++	FLEX,
++	EVENT_ANCHOR
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/ExternalLinkType.java b/src/main/java/com/duszek/pindrop/entity/ExternalLinkType.java
+new file mode 100644
+index 0000000..3cfaae8
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/ExternalLinkType.java
+@@ -0,0 +1,11 @@
++package com.duszek.pindrop.entity;
++
++public enum ExternalLinkType {
++	ALLTRAILS,
++	WIKILOC,
++	ARTICLE,
++	MAPS,
++	YOUTUBE,
++	TICKETS,
++	OTHER
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/PhotoConfidence.java b/src/main/java/com/duszek/pindrop/entity/PhotoConfidence.java
+new file mode 100644
+index 0000000..e8f2dbb
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/PhotoConfidence.java
+@@ -0,0 +1,7 @@
++package com.duszek.pindrop.entity;
++
++public enum PhotoConfidence {
++	HIGH,
++	LOW,
++	NONE
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/TimeFlexibility.java b/src/main/java/com/duszek/pindrop/entity/TimeFlexibility.java
+new file mode 100644
+index 0000000..6fd3e6e
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/TimeFlexibility.java
+@@ -0,0 +1,7 @@
++package com.duszek.pindrop.entity;
++
++public enum TimeFlexibility {
++	FIXED,
++	FLEXIBLE,
++	WINDOW
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/TripDayBlock.java b/src/main/java/com/duszek/pindrop/entity/TripDayBlock.java
+new file mode 100644
+index 0000000..a19819d
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/TripDayBlock.java
+@@ -0,0 +1,115 @@
++package com.duszek.pindrop.entity;
++
++import jakarta.persistence.CascadeType;
++import jakarta.persistence.Column;
++import jakarta.persistence.Entity;
++import jakarta.persistence.EnumType;
++import jakarta.persistence.Enumerated;
++import jakarta.persistence.FetchType;
++import jakarta.persistence.GeneratedValue;
++import jakarta.persistence.GenerationType;
++import jakarta.persistence.Id;
++import jakarta.persistence.JoinColumn;
++import jakarta.persistence.ManyToOne;
++import jakarta.persistence.OneToMany;
++import jakarta.persistence.OrderBy;
++import jakarta.persistence.Table;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++
++import java.time.LocalTime;
++import java.util.ArrayList;
++import java.util.List;
++
++@Entity
++@Table(name = "trip_day_blocks")
++@Getter
++@Setter
++@NoArgsConstructor
++public class TripDayBlock {
++
++	@Id
++	@GeneratedValue(strategy = GenerationType.IDENTITY)
++	private Long id;
++
++	@ManyToOne(fetch = FetchType.LAZY, optional = false)
++	@JoinColumn(name = "day_plan_id", nullable = false)
++	private TripDayPlan dayPlan;
++
++	@ManyToOne(fetch = FetchType.LAZY)
++	@JoinColumn(name = "parent_block_id")
++	private TripDayBlock parentBlock;
++
++	@Enumerated(EnumType.STRING)
++	@Column(nullable = false)
++	private DayBlockKind kind;
++
++	@Column(name = "start_time", nullable = false)
++	private LocalTime startTime;
++
++	@Column(name = "end_time")
++	private LocalTime endTime;
++
++	@Enumerated(EnumType.STRING)
++	private TimeFlexibility flexibility;
++
++	@Column(nullable = false)
++	private String title;
++
++	@Column(columnDefinition = "TEXT")
++	private String narrative;
++
++	@Column(columnDefinition = "TEXT")
++	private String logistics;
++
++	@Column(name = "cost_label")
++	private String costLabel;
++
++	@Column(name = "cost_min")
++	private Integer costMin;
++
++	@Column(name = "cost_max")
++	private Integer costMax;
++
++	@Column(name = "photo_url", columnDefinition = "TEXT")
++	private String photoUrl;
++
++	@Enumerated(EnumType.STRING)
++	@Column(name = "photo_confidence")
++	private PhotoConfidence photoConfidence;
++
++	@Column(name = "route_summary")
++	private String routeSummary;
++
++	@Column(name = "sort_order", nullable = false)
++	private int sortOrder;
++
++	@OneToMany(mappedBy = "block", cascade = CascadeType.ALL, orphanRemoval = true)
++	@OrderBy("sortOrder ASC, id ASC")
++	private List<TripDayPin> pins = new ArrayList<>();
++
++	@OneToMany(mappedBy = "block", cascade = CascadeType.ALL, orphanRemoval = true)
++	@OrderBy("sortOrder ASC, id ASC")
++	private List<TripDayLink> links = new ArrayList<>();
++
++	@OneToMany(mappedBy = "parentBlock", cascade = CascadeType.ALL, orphanRemoval = true)
++	@OrderBy("sortOrder ASC, id ASC")
++	private List<TripDayBlock> alternatives = new ArrayList<>();
++
++	public void addPin(TripDayPin pin) {
++		pin.setBlock(this);
++		pins.add(pin);
++	}
++
++	public void addLink(TripDayLink link) {
++		link.setBlock(this);
++		links.add(link);
++	}
++
++	public void addAlternative(TripDayBlock alternative) {
++		alternative.setParentBlock(this);
++		alternative.setDayPlan(this.dayPlan);
++		alternatives.add(alternative);
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/TripDayLink.java b/src/main/java/com/duszek/pindrop/entity/TripDayLink.java
+new file mode 100644
+index 0000000..6b82746
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/TripDayLink.java
+@@ -0,0 +1,44 @@
++package com.duszek.pindrop.entity;
++
++import jakarta.persistence.Column;
++import jakarta.persistence.Entity;
++import jakarta.persistence.EnumType;
++import jakarta.persistence.Enumerated;
++import jakarta.persistence.FetchType;
++import jakarta.persistence.GeneratedValue;
++import jakarta.persistence.GenerationType;
++import jakarta.persistence.Id;
++import jakarta.persistence.JoinColumn;
++import jakarta.persistence.ManyToOne;
++import jakarta.persistence.Table;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++
++@Entity
++@Table(name = "trip_day_links")
++@Getter
++@Setter
++@NoArgsConstructor
++public class TripDayLink {
++
++	@Id
++	@GeneratedValue(strategy = GenerationType.IDENTITY)
++	private Long id;
++
++	@ManyToOne(fetch = FetchType.LAZY, optional = false)
++	@JoinColumn(name = "block_id", nullable = false)
++	private TripDayBlock block;
++
++	@Enumerated(EnumType.STRING)
++	@Column(name = "link_type", nullable = false)
++	private ExternalLinkType linkType;
++
++	@Column(nullable = false, columnDefinition = "TEXT")
++	private String url;
++
++	private String label;
++
++	@Column(name = "sort_order", nullable = false)
++	private int sortOrder;
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/TripDayPin.java b/src/main/java/com/duszek/pindrop/entity/TripDayPin.java
+new file mode 100644
+index 0000000..11abde4
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/TripDayPin.java
+@@ -0,0 +1,58 @@
++package com.duszek.pindrop.entity;
++
++import jakarta.persistence.Column;
++import jakarta.persistence.Entity;
++import jakarta.persistence.EnumType;
++import jakarta.persistence.Enumerated;
++import jakarta.persistence.FetchType;
++import jakarta.persistence.GeneratedValue;
++import jakarta.persistence.GenerationType;
++import jakarta.persistence.Id;
++import jakarta.persistence.JoinColumn;
++import jakarta.persistence.ManyToOne;
++import jakarta.persistence.Table;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++
++@Entity
++@Table(name = "trip_day_pins")
++@Getter
++@Setter
++@NoArgsConstructor
++public class TripDayPin {
++
++	@Id
++	@GeneratedValue(strategy = GenerationType.IDENTITY)
++	private Long id;
++
++	@ManyToOne(fetch = FetchType.LAZY, optional = false)
++	@JoinColumn(name = "block_id", nullable = false)
++	private TripDayBlock block;
++
++	@Column(nullable = false)
++	private String name;
++
++	@Enumerated(EnumType.STRING)
++	@Column(nullable = false)
++	private DayPinRole role;
++
++	private Double lat;
++
++	private Double lng;
++
++	@Column(name = "place_id")
++	private String placeId;
++
++	@Column(name = "maps_url", columnDefinition = "TEXT")
++	private String mapsUrl;
++
++	@Column(columnDefinition = "TEXT")
++	private String address;
++
++	@Column(name = "cost_label")
++	private String costLabel;
++
++	@Column(name = "sort_order", nullable = false)
++	private int sortOrder;
++}
+diff --git a/src/main/java/com/duszek/pindrop/entity/TripDayPlan.java b/src/main/java/com/duszek/pindrop/entity/TripDayPlan.java
+new file mode 100644
+index 0000000..ef3e05c
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/entity/TripDayPlan.java
+@@ -0,0 +1,100 @@
++package com.duszek.pindrop.entity;
++
++import jakarta.persistence.CascadeType;
++import jakarta.persistence.Column;
++import jakarta.persistence.Entity;
++import jakarta.persistence.EnumType;
++import jakarta.persistence.Enumerated;
++import jakarta.persistence.FetchType;
++import jakarta.persistence.GeneratedValue;
++import jakarta.persistence.GenerationType;
++import jakarta.persistence.Id;
++import jakarta.persistence.JoinColumn;
++import jakarta.persistence.ManyToOne;
++import jakarta.persistence.OneToMany;
++import jakarta.persistence.OrderBy;
++import jakarta.persistence.Table;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++import lombok.Setter;
++import org.hibernate.annotations.JdbcTypeCode;
++import org.hibernate.type.SqlTypes;
++
++import java.time.LocalDate;
++import java.util.ArrayList;
++import java.util.List;
++
++@Entity
++@Table(name = "trip_day_plans")
++@Getter
++@Setter
++@NoArgsConstructor
++public class TripDayPlan {
++
++	@Id
++	@GeneratedValue(strategy = GenerationType.IDENTITY)
++	private Long id;
++
++	@ManyToOne(fetch = FetchType.LAZY, optional = false)
++	@JoinColumn(name = "trip_id", nullable = false)
++	private Trip trip;
++
++	@Column(name = "day_number", nullable = false)
++	private int dayNumber;
++
++	@Column(name = "day_date", nullable = false)
++	private LocalDate dayDate;
++
++	private String title;
++
++	@Column(columnDefinition = "TEXT")
++	private String narrative;
++
++	@Column(columnDefinition = "TEXT[]")
++	@JdbcTypeCode(SqlTypes.ARRAY)
++	private List<String> themes = new ArrayList<>();
++
++	@Enumerated(EnumType.STRING)
++	@Column(name = "day_role")
++	private DayRole dayRole;
++
++	@Column(name = "activity_domain")
++	private String activityDomain;
++
++	@Column(name = "distance_km")
++	private Double distanceKm;
++
++	@Column(name = "duration_label")
++	private String durationLabel;
++
++	@Column(name = "elevation_m")
++	private Integer elevationM;
++
++	@Column(name = "cost_min")
++	private Integer costMin;
++
++	@Column(name = "cost_max")
++	private Integer costMax;
++
++	@Column(nullable = false)
++	private String currency = "EUR";
++
++	@OneToMany(mappedBy = "dayPlan", cascade = CascadeType.ALL, orphanRemoval = true)
++	@OrderBy("sortOrder ASC, id ASC")
++	private List<TripDayBlock> blocks = new ArrayList<>();
++
++	public void addBlock(TripDayBlock block) {
++		block.setDayPlan(this);
++		assignPlan(block);
++		blocks.add(block);
++	}
++
++	private void assignPlan(TripDayBlock block) {
++		block.setDayPlan(this);
++		if (block.getAlternatives() != null) {
++			for (TripDayBlock alternative : block.getAlternatives()) {
++				assignPlan(alternative);
++			}
++		}
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/exception/GlobalExceptionHandler.java b/src/main/java/com/duszek/pindrop/exception/GlobalExceptionHandler.java
+index b5b3844..355bec5 100644
+--- a/src/main/java/com/duszek/pindrop/exception/GlobalExceptionHandler.java
++++ b/src/main/java/com/duszek/pindrop/exception/GlobalExceptionHandler.java
+@@ -17,6 +17,12 @@ import java.util.Map;
+ @RestControllerAdvice
+ public class GlobalExceptionHandler {
+ 
++	@ExceptionHandler(UnprocessableEntityException.class)
++	public ResponseEntity<Map<String, String>> handleUnprocessable(UnprocessableEntityException ex) {
++		return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
++				.body(Map.of("message", ex.getMessage()));
++	}
++
+ 	@ExceptionHandler(ForbiddenException.class)
+ 	public ResponseEntity<Map<String, String>> handleForbidden(ForbiddenException ex) {
+ 		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+diff --git a/src/main/java/com/duszek/pindrop/exception/UnprocessableEntityException.java b/src/main/java/com/duszek/pindrop/exception/UnprocessableEntityException.java
+new file mode 100644
+index 0000000..a4c62be
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/exception/UnprocessableEntityException.java
+@@ -0,0 +1,8 @@
++package com.duszek.pindrop.exception;
++
++public class UnprocessableEntityException extends RuntimeException {
++
++	public UnprocessableEntityException(String message) {
++		super(message);
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/ai/TripPlanPromptBuilder.java b/src/main/java/com/duszek/pindrop/provider/ai/TripPlanPromptBuilder.java
+index d5d467a..b9a98e5 100644
+--- a/src/main/java/com/duszek/pindrop/provider/ai/TripPlanPromptBuilder.java
++++ b/src/main/java/com/duszek/pindrop/provider/ai/TripPlanPromptBuilder.java
+@@ -22,8 +22,9 @@ public final class TripPlanPromptBuilder {
+ 
+ 		return """
+ 				You are a travel planner. Return JSON only with this shape:
+-				{"proposals":[{"type":"RELAXED|BALANCED|INTENSE","title":"...","summary":"...","estimatedCostUsd":1250,"recommended":false,"highlights":["..."],"costBreakdown":{"estimatedTotal":{"min":800,"max":1200,"currency":"EUR","confidence":"estimated"},"breakdown":{"accommodation":{"min":300,"max":450},"transport":{"min":120,"max":180,"includesCarCosts":%s,"sub":{"publicTransit":{"min":40,"max":60},"fuel":{"min":0,"max":0},"parking":{"min":0,"max":0},"carRental":{"min":0,"max":0}}},"food":{"min":200,"max":280},"attractions":{"min":80,"max":150}}},"days":[{"dayNumber":1,"date":"%s","activities":[{"startTime":"09:00","activityType":"ACTIVITY|FOOD|TRANSPORT|ACCOMMODATION","title":"...","description":"...","placeName":"...","tempC":24}]}]}]}
++				{"proposals":[{"type":"RELAXED|BALANCED|INTENSE","title":"...","summary":"...","estimatedCostUsd":1250,"recommended":false,"highlights":["..."],"costBreakdown":{"estimatedTotal":{"min":800,"max":1200,"currency":"EUR","confidence":"estimated"},"breakdown":{"accommodation":{"min":300,"max":450},"transport":{"min":120,"max":180,"includesCarCosts":%s,"sub":{"publicTransit":{"min":40,"max":60},"fuel":{"min":0,"max":0},"parking":{"min":0,"max":0},"carRental":{"min":0,"max":0}}},"food":{"min":200,"max":280},"attractions":{"min":80,"max":150}}}}]}
+ 				Generate exactly 3 proposals (RELAXED, BALANCED, INTENSE). Mark BALANCED as recommended.
++				Do NOT include days[] or activities. Light proposals are overviews only; a later deep pass writes the editorial day plan.
+ 				Proposal types are itinerary variants; user travel pace constrains activity density and style inside each variant.
+ 				Destination: %s
+ 				Dates: %s to %s
+@@ -34,7 +35,6 @@ public final class TripPlanPromptBuilder {
+ 				Treat additional requirements as hard constraints where feasible; mention in summary if any cannot be met.
+ 				""".formatted(
+ 				includesCarCosts,
+-				request.startDate(),
+ 				request.destination(),
+ 				request.startDate(),
+ 				request.endDate(),
+diff --git a/src/main/java/com/duszek/pindrop/provider/ai/claude/AnthropicMessagesClient.java b/src/main/java/com/duszek/pindrop/provider/ai/claude/AnthropicMessagesClient.java
+new file mode 100644
+index 0000000..8e42594
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/ai/claude/AnthropicMessagesClient.java
+@@ -0,0 +1,125 @@
++package com.duszek.pindrop.provider.ai.claude;
++
++import com.duszek.pindrop.config.AppProperties;
++import lombok.extern.slf4j.Slf4j;
++import org.springframework.http.MediaType;
++import org.springframework.stereotype.Component;
++import org.springframework.web.reactive.function.client.WebClient;
++import tools.jackson.databind.JsonNode;
++import tools.jackson.databind.json.JsonMapper;
++
++import java.util.ArrayList;
++import java.util.LinkedHashMap;
++import java.util.List;
++import java.util.Map;
++
++@Slf4j
++@Component
++public class AnthropicMessagesClient {
++
++	private final AppProperties appProperties;
++	private final JsonMapper jsonMapper;
++	private final WebClient webClient;
++
++	public AnthropicMessagesClient(AppProperties appProperties, JsonMapper jsonMapper) {
++		this.appProperties = appProperties;
++		this.jsonMapper = jsonMapper;
++		this.webClient = WebClient.builder()
++				.baseUrl("https://api.anthropic.com")
++				.build();
++	}
++
++	public boolean isConfigured() {
++		String key = apiKey();
++		return key != null && !key.isBlank();
++	}
++
++	public String complete(String system, String user, boolean webSearch) {
++		if (!isConfigured()) {
++			throw new IllegalStateException("Anthropic API key is not configured");
++		}
++
++		Map<String, Object> body = new LinkedHashMap<>();
++		body.put("model", model());
++		body.put("max_tokens", 16_000);
++		body.put("system", system);
++		body.put("messages", List.of(Map.of("role", "user", "content", user)));
++		if (webSearch) {
++			body.put("tools", List.of(Map.of("type", "web_search_20250305", "name", "web_search")));
++		}
++
++		@SuppressWarnings("unchecked")
++		Map<String, Object> response = webClient.post()
++				.uri("/v1/messages")
++				.contentType(MediaType.APPLICATION_JSON)
++				.header("x-api-key", apiKey())
++				.header("anthropic-version", "2023-06-01")
++				.bodyValue(body)
++				.retrieve()
++				.bodyToMono(Map.class)
++				.block();
++
++		if (response == null) {
++			throw new IllegalStateException("Empty Anthropic response");
++		}
++		return extractText(response);
++	}
++
++	@SuppressWarnings("unchecked")
++	private String extractText(Map<String, Object> response) {
++		Object content = response.get("content");
++		if (content instanceof String text) {
++			return text;
++		}
++		if (!(content instanceof List<?> blocks) || blocks.isEmpty()) {
++			throw new IllegalStateException("Anthropic response missing content");
++		}
++		List<String> texts = new ArrayList<>();
++		for (Object block : blocks) {
++			if (block instanceof Map<?, ?> map) {
++				Object type = map.get("type");
++				if ("text".equals(String.valueOf(type)) && map.get("text") != null) {
++					texts.add(String.valueOf(map.get("text")));
++				}
++			}
++		}
++		if (texts.isEmpty()) {
++			try {
++				JsonNode node = jsonMapper.valueToTree(response);
++				JsonNode contentNode = node.get("content");
++				if (contentNode != null && contentNode.isArray()) {
++					for (JsonNode item : contentNode) {
++						if ("text".equals(item.path("type").asString()) && item.get("text") != null) {
++							texts.add(item.get("text").asString());
++						}
++					}
++				}
++			} catch (Exception ex) {
++				log.debug("Failed to parse Anthropic content tree: {}", ex.getMessage());
++			}
++		}
++		if (texts.isEmpty()) {
++			throw new IllegalStateException("Anthropic response had no text blocks");
++		}
++		return String.join("\n", texts);
++	}
++
++	private String apiKey() {
++		String anthropic = appProperties.getAi().getAnthropicApiKey();
++		if (anthropic != null && !anthropic.isBlank()) {
++			return anthropic;
++		}
++		if ("claude".equalsIgnoreCase(appProperties.getAi().getProvider())) {
++			return appProperties.getAi().getApiKey();
++		}
++		return "";
++	}
++
++	private String model() {
++		String configured = appProperties.getAi().getAnthropicModel();
++		if (configured != null && !configured.isBlank()) {
++			return configured;
++		}
++		return "claude-sonnet-4-20250514";
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/ai/claude/ClaudeTripPlanProvider.java b/src/main/java/com/duszek/pindrop/provider/ai/claude/ClaudeTripPlanProvider.java
+new file mode 100644
+index 0000000..f851f45
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/ai/claude/ClaudeTripPlanProvider.java
+@@ -0,0 +1,48 @@
++package com.duszek.pindrop.provider.ai.claude;
++
++import com.duszek.pindrop.provider.ai.TripPlanAiProvider;
++import com.duszek.pindrop.provider.ai.TripPlanGenerationRequest;
++import com.duszek.pindrop.provider.ai.TripPlanGenerationResult;
++import com.duszek.pindrop.provider.ai.TripPlanJsonParser;
++import com.duszek.pindrop.provider.ai.TripPlanPromptBuilder;
++import com.duszek.pindrop.provider.ai.TripPlanTemplateEngine;
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
++import org.springframework.stereotype.Component;
++import tools.jackson.databind.json.JsonMapper;
++
++@Slf4j
++@Component
++@ConditionalOnProperty(name = "app.ai.provider", havingValue = "claude")
++@RequiredArgsConstructor
++public class ClaudeTripPlanProvider implements TripPlanAiProvider {
++
++	private final AnthropicMessagesClient anthropicMessagesClient;
++	private final JsonMapper jsonMapper;
++	private final TripPlanTemplateEngine templateEngine;
++
++	@Override
++	public TripPlanGenerationResult generateProposals(TripPlanGenerationRequest request) {
++		if (!anthropicMessagesClient.isConfigured()) {
++			return templateEngine.generateProposals(request);
++		}
++		try {
++			String response = anthropicMessagesClient.complete(
++					"You write concise trip proposal overviews. Return JSON only. Never include days[].",
++					TripPlanPromptBuilder.buildGenerationPrompt(request),
++					false);
++			return TripPlanJsonParser.parse(jsonMapper, response, request, templateEngine);
++		} catch (Exception ex) {
++			log.warn("Claude light generation failed, using template proposals: {}", ex.getMessage());
++			return templateEngine.generateProposals(request);
++		}
++	}
++
++	@Override
++	public TripPlanGenerationResult.GeneratedActivity regenerateActivity(
++			TripPlanGenerationRequest tripContext,
++			TripPlanGenerationResult.GeneratedActivity currentActivity) {
++		return templateEngine.regenerateActivity(tripContext, currentActivity);
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/ClaudeFirstDayPlanProvider.java b/src/main/java/com/duszek/pindrop/provider/dayplan/ClaudeFirstDayPlanProvider.java
+new file mode 100644
+index 0000000..872c1ef
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/ClaudeFirstDayPlanProvider.java
+@@ -0,0 +1,67 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.exception.UnprocessableEntityException;
++import com.duszek.pindrop.provider.ai.claude.AnthropicMessagesClient;
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.springframework.stereotype.Component;
++import tools.jackson.databind.json.JsonMapper;
++
++import java.util.List;
++import java.util.stream.Collectors;
++
++@Slf4j
++@Component
++@RequiredArgsConstructor
++public class ClaudeFirstDayPlanProvider implements DayPlanAiProvider {
++
++	private final AnthropicMessagesClient anthropicMessagesClient;
++	private final EditorialDayPlanStub editorialDayPlanStub;
++	private final JsonMapper jsonMapper;
++
++	@Override
++	public List<GeneratedDayPlan> generateDayPlans(DeepDayPlanRequest request) {
++		if (!anthropicMessagesClient.isConfigured()) {
++			return editorialDayPlanStub.generate(request);
++		}
++
++		String user = EditorialDayPlanPromptBuilder.buildDeepPrompt(request);
++		try {
++			List<GeneratedDayPlan> first = complete(user);
++			List<String> errors = validateAll(first, request.trip().destination());
++			if (errors.isEmpty()) {
++				return first;
++			}
++			log.info("Claude day plan failed concreteness checks, retrying once: {}", errors);
++			List<GeneratedDayPlan> retry = complete(
++					user + "\n\n" + EditorialDayPlanPromptBuilder.retryPrompt(String.join("; ", errors)));
++			List<String> retryErrors = validateAll(retry, request.trip().destination());
++			if (retryErrors.isEmpty()) {
++				return retry;
++			}
++			throw new UnprocessableEntityException(
++					"Could not generate a specific day plan. Please regenerate. " + String.join("; ", retryErrors));
++		} catch (UnprocessableEntityException ex) {
++			throw ex;
++		} catch (Exception ex) {
++			log.warn("Claude deep generation failed, using editorial stub: {}", ex.getMessage());
++			return editorialDayPlanStub.generate(request);
++		}
++	}
++
++	private List<GeneratedDayPlan> complete(String user) {
++		String raw = anthropicMessagesClient.complete(
++				EditorialDayPlanPromptBuilder.systemPrompt(), user, true);
++		return DayPlanJsonParser.parseDays(jsonMapper, raw);
++	}
++
++	private static List<String> validateAll(List<GeneratedDayPlan> days, String destination) {
++		if (days == null || days.isEmpty()) {
++			return List.of("No days returned");
++		}
++		return days.stream()
++				.flatMap(day -> DayPlanConcretenessValidator.validate(day, destination).stream()
++						.map(error -> "Day " + day.dayNumber() + ": " + error))
++				.collect(Collectors.toList());
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/DayPinEnricher.java b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPinEnricher.java
+new file mode 100644
+index 0000000..9c071db
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPinEnricher.java
+@@ -0,0 +1,202 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.PhotoConfidence;
++import com.duszek.pindrop.provider.places.GooglePlacesClient;
++import com.duszek.pindrop.provider.places.PlaceSearchResult;
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.springframework.stereotype.Component;
++
++import java.util.ArrayList;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Locale;
++import java.util.Set;
++
++@Slf4j
++@Component
++@RequiredArgsConstructor
++public class DayPinEnricher {
++
++	private static final double STRONG_MATCH_KM = 80;
++
++	private final GooglePlacesClient googlePlacesClient;
++
++	public List<GeneratedDayPlan> enrich(
++			List<GeneratedDayPlan> days,
++			String destination,
++			double tripLat,
++			double tripLng,
++			Set<String> alreadyUsedPlaceIds) {
++		Set<String> usedPlaceIds = new HashSet<>(alreadyUsedPlaceIds != null ? alreadyUsedPlaceIds : Set.of());
++		List<GeneratedDayPlan> enrichedDays = new ArrayList<>();
++		for (GeneratedDayPlan day : days) {
++			List<GeneratedDayPlan.GeneratedDayBlock> blocks = new ArrayList<>();
++			for (GeneratedDayPlan.GeneratedDayBlock block : day.blocks()) {
++				blocks.add(enrichBlock(block, destination, tripLat, tripLng, usedPlaceIds));
++			}
++			enrichedDays.add(day.withBlocks(blocks));
++		}
++		return uniquifyMapsUrls(enrichedDays, destination);
++	}
++
++	private GeneratedDayPlan.GeneratedDayBlock enrichBlock(
++			GeneratedDayPlan.GeneratedDayBlock block,
++			String destination,
++			double tripLat,
++			double tripLng,
++			Set<String> usedPlaceIds) {
++		List<GeneratedDayPlan.GeneratedDayPin> pins = new ArrayList<>();
++		PlaceSearchResult photoMatch = null;
++		List<GeneratedDayPlan.GeneratedDayPin> sourcePins = block.pins() != null ? block.pins() : List.of();
++		for (GeneratedDayPlan.GeneratedDayPin pin : sourcePins) {
++			if (PinMapsUrlBuilder.isDestinationOnlyName(pin.name(), destination)) {
++				continue;
++			}
++			GeneratedDayPlan.GeneratedDayPin enriched = enrichPin(pin, destination, tripLat, tripLng, usedPlaceIds);
++			pins.add(enriched);
++			if (photoMatch == null && enriched.placeId() != null && googlePlacesClient.isConfigured()) {
++				photoMatch = lookup(enriched.name(), destination, tripLat, tripLng);
++			}
++		}
++
++		List<GeneratedDayPlan.GeneratedDayBlock> alternatives = new ArrayList<>();
++		if (block.alternatives() != null) {
++			for (GeneratedDayPlan.GeneratedDayBlock alternative : block.alternatives()) {
++				alternatives.add(enrichBlock(alternative, destination, tripLat, tripLng, usedPlaceIds));
++			}
++		}
++
++		GeneratedDayPlan.GeneratedDayBlock next = block.withPins(pins).withAlternatives(alternatives);
++		if (photoMatch != null && photoMatch.photoUrl() != null && !photoMatch.photoUrl().isBlank()) {
++			return next.withPhoto(photoMatch.photoUrl(), PhotoConfidence.HIGH);
++		}
++		return next.withPhoto(null, PhotoConfidence.NONE);
++	}
++
++	private GeneratedDayPlan.GeneratedDayPin enrichPin(
++			GeneratedDayPlan.GeneratedDayPin pin,
++			String destination,
++			double tripLat,
++			double tripLng,
++			Set<String> usedPlaceIds) {
++		PlaceSearchResult match = lookup(pin.name(), destination, tripLat, tripLng);
++		if (match == null || !isStrongMatch(match, pin, destination, tripLat, tripLng)) {
++			return PinMapsUrlBuilder.withResolvedUrl(pin, destination);
++		}
++		if (match.placeId() != null && !usedPlaceIds.add(match.placeId())) {
++			return PinMapsUrlBuilder.withResolvedUrl(pin, destination);
++		}
++
++		GeneratedDayPlan.GeneratedDayPin updated = pin.enriched(
++				pin.name(),
++				pin.role(),
++				match.lat() != 0 ? match.lat() : pin.lat(),
++				match.lng() != 0 ? match.lng() : pin.lng(),
++				match.placeId(),
++				null,
++				firstNonBlank(match.displayName(), pin.address()),
++				pin.costLabel());
++		return PinMapsUrlBuilder.withResolvedUrl(updated, destination);
++	}
++
++	private PlaceSearchResult lookup(String name, String destination, double tripLat, double tripLng) {
++		if (!googlePlacesClient.isConfigured() || name == null || name.isBlank()) {
++			return null;
++		}
++		String query = name + ", " + destination;
++		List<PlaceSearchResult> results = googlePlacesClient.search(query, 3, tripLat, tripLng);
++		return results.isEmpty() ? null : results.get(0);
++	}
++
++	private boolean isStrongMatch(
++			PlaceSearchResult match,
++			GeneratedDayPlan.GeneratedDayPin pin,
++			String destination,
++			double tripLat,
++			double tripLng) {
++		if (match == null || match.name() == null) {
++			return false;
++		}
++		if (PinMapsUrlBuilder.isDestinationOnlyName(match.name(), destination)) {
++			return false;
++		}
++		double distanceKm = haversineKm(tripLat, tripLng, match.lat(), match.lng());
++		if (distanceKm > STRONG_MATCH_KM) {
++			return false;
++		}
++		String needle = PinMapsUrlBuilder.normalize(pin.name());
++		String haystack = PinMapsUrlBuilder.normalize(match.name() + " " + match.displayName());
++		return haystack.contains(firstToken(needle)) || needle.contains(PinMapsUrlBuilder.normalize(match.name()));
++	}
++
++	private static List<GeneratedDayPlan> uniquifyMapsUrls(List<GeneratedDayPlan> days, String destination) {
++		Set<String> seen = new HashSet<>();
++		List<GeneratedDayPlan> result = new ArrayList<>();
++		for (GeneratedDayPlan day : days) {
++			List<GeneratedDayPlan.GeneratedDayBlock> blocks = new ArrayList<>();
++			for (GeneratedDayPlan.GeneratedDayBlock block : day.blocks()) {
++				blocks.add(uniquifyBlock(block, destination, seen));
++			}
++			result.add(day.withBlocks(blocks));
++		}
++		return result;
++	}
++
++	private static GeneratedDayPlan.GeneratedDayBlock uniquifyBlock(
++			GeneratedDayPlan.GeneratedDayBlock block,
++			String destination,
++			Set<String> seen) {
++		List<GeneratedDayPlan.GeneratedDayPin> pins = new ArrayList<>();
++		List<GeneratedDayPlan.GeneratedDayPin> sourcePins = block.pins() != null ? block.pins() : List.of();
++		for (GeneratedDayPlan.GeneratedDayPin pin : sourcePins) {
++			GeneratedDayPlan.GeneratedDayPin resolved = PinMapsUrlBuilder.withResolvedUrl(pin, destination);
++			if (resolved.mapsUrl() != null && !seen.add(resolved.mapsUrl())) {
++				resolved = PinMapsUrlBuilder.withResolvedUrl(
++						new GeneratedDayPlan.GeneratedDayPin(
++								pin.name(), pin.role(), null, null, null, null, pin.address(), pin.costLabel()),
++						destination);
++				seen.add(resolved.mapsUrl());
++			}
++			pins.add(resolved);
++		}
++		List<GeneratedDayPlan.GeneratedDayBlock> alternatives = new ArrayList<>();
++		if (block.alternatives() != null) {
++			for (GeneratedDayPlan.GeneratedDayBlock alternative : block.alternatives()) {
++				alternatives.add(uniquifyBlock(alternative, destination, seen));
++			}
++		}
++		return block.withPins(pins).withAlternatives(alternatives);
++	}
++
++	private static String firstToken(String value) {
++		if (value == null || value.isBlank()) {
++			return "";
++		}
++		return value.split(" ")[0];
++	}
++
++	private static String firstNonBlank(String... values) {
++		for (String value : values) {
++			if (value != null && !value.isBlank()) {
++				return value;
++			}
++		}
++		return null;
++	}
++
++	static double haversineKm(double lat1, double lng1, double lat2, double lng2) {
++		double earth = 6371.0;
++		double dLat = Math.toRadians(lat2 - lat1);
++		double dLng = Math.toRadians(lng2 - lng1);
++		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
++				+ Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
++				* Math.sin(dLng / 2) * Math.sin(dLng / 2);
++		return earth * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
++	}
++
++	@SuppressWarnings("unused")
++	private static String locale(String value) {
++		return value == null ? "" : value.toLowerCase(Locale.ROOT);
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanAiProvider.java b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanAiProvider.java
+new file mode 100644
+index 0000000..f26e06f
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanAiProvider.java
+@@ -0,0 +1,8 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import java.util.List;
++
++public interface DayPlanAiProvider {
++
++	List<GeneratedDayPlan> generateDayPlans(DeepDayPlanRequest request);
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanConcretenessValidator.java b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanConcretenessValidator.java
+new file mode 100644
+index 0000000..5a5700f
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanConcretenessValidator.java
+@@ -0,0 +1,129 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.DayPinRole;
++
++import java.util.ArrayList;
++import java.util.EnumSet;
++import java.util.List;
++import java.util.Locale;
++import java.util.Set;
++
++public final class DayPlanConcretenessValidator {
++
++	private static final Set<DayBlockKind> CORE_KINDS = EnumSet.of(
++			DayBlockKind.TREK,
++			DayBlockKind.CITY_WALK,
++			DayBlockKind.MUSEUM,
++			DayBlockKind.BEACH,
++			DayBlockKind.CAMP,
++			DayBlockKind.FOOD);
++
++	private DayPlanConcretenessValidator() {
++	}
++
++	public static List<String> validate(GeneratedDayPlan plan, String destination) {
++		List<String> errors = new ArrayList<>();
++		if (plan == null) {
++			errors.add("Day plan is missing");
++			return errors;
++		}
++		if (plan.narrative() == null || plan.narrative().isBlank()) {
++			errors.add("Day narrative is required");
++		}
++		if (plan.blocks() == null || plan.blocks().isEmpty()) {
++			errors.add("Day must contain at least one time block");
++			return errors;
++		}
++
++		List<GeneratedDayPlan.GeneratedDayPin> allPins = new ArrayList<>();
++		boolean hasCorePin = false;
++		for (GeneratedDayPlan.GeneratedDayBlock block : plan.blocks()) {
++			if (block.narrative() == null || block.narrative().isBlank()) {
++				errors.add("Block '" + block.title() + "' is missing narrative");
++			}
++			if (block.title() != null && looksGeneric(block.title(), destination)) {
++				errors.add("Block title is generic: " + block.title());
++			}
++			List<GeneratedDayPlan.GeneratedDayPin> pins = block.pins() != null ? block.pins() : List.of();
++			if (CORE_KINDS.contains(block.kind()) && pins.isEmpty()) {
++				errors.add("Core block '" + block.title() + "' needs at least one pin");
++			}
++			for (GeneratedDayPlan.GeneratedDayPin pin : pins) {
++				if (pin.name() == null || pin.name().isBlank()) {
++					errors.add("Pin is missing a name");
++					continue;
++				}
++				if (PinMapsUrlBuilder.isDestinationOnlyName(pin.name(), destination)) {
++					errors.add("Pin name must not be the destination: " + pin.name());
++				}
++				if (looksGeneric(pin.name(), destination)) {
++					errors.add("Pin name is generic: " + pin.name());
++				}
++				if (isCoreRole(pin.role()) || CORE_KINDS.contains(block.kind())) {
++					hasCorePin = true;
++				}
++				allPins.add(pin);
++			}
++		}
++
++		if (!hasCorePin) {
++			errors.add("Day is missing a core venue pin");
++		}
++		if (allPins.size() >= 2 && allSameCoordinates(allPins)) {
++			errors.add("All pins share the same coordinates");
++		}
++		return errors;
++	}
++
++	public static boolean looksGeneric(String value, String destination) {
++		String text = PinMapsUrlBuilder.normalize(value);
++		if (text.isBlank()) {
++			return true;
++		}
++		String city = PinMapsUrlBuilder.normalize(PinMapsUrlBuilder.destinationCity(destination));
++		if (!city.isBlank() && (text.equals("meal in " + city)
++				|| text.equals("check in and orient")
++				|| text.equals(city + " highlight")
++				|| text.startsWith("local cuisine in " + city)
++				|| text.startsWith(city + " leisure stop")
++				|| text.startsWith(city + " trail / outdoor")
++				|| text.equals("orient")
++				|| text.equals("check in"))) {
++			return true;
++		}
++		return text.equals("activity") || text.equals("food") || text.equals("meal");
++	}
++
++	private static boolean isCoreRole(DayPinRole role) {
++		return role == DayPinRole.TRAILHEAD
++				|| role == DayPinRole.HUT
++				|| role == DayPinRole.VIEWPOINT
++				|| role == DayPinRole.RESTAURANT
++				|| role == DayPinRole.MUSEUM
++				|| role == DayPinRole.BEACH
++				|| role == DayPinRole.CAMP
++				|| role == DayPinRole.LODGING
++				|| role == DayPinRole.STOP;
++	}
++
++	private static boolean allSameCoordinates(List<GeneratedDayPlan.GeneratedDayPin> pins) {
++		GeneratedDayPlan.GeneratedDayPin firstWithCoords = pins.stream()
++				.filter(PinMapsUrlBuilder::hasCoords)
++				.findFirst()
++				.orElse(null);
++		if (firstWithCoords == null) {
++			return false;
++		}
++		return pins.stream().filter(PinMapsUrlBuilder::hasCoords)
++				.allMatch(pin -> PinMapsUrlBuilder.sameCoords(firstWithCoords, pin));
++	}
++
++	public static String cityKey(String destination) {
++		return PinMapsUrlBuilder.destinationCity(destination);
++	}
++
++	public static String normalize(String value) {
++		return value == null ? "" : value.toLowerCase(Locale.ROOT);
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanJsonParser.java b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanJsonParser.java
+new file mode 100644
+index 0000000..92be110
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlanJsonParser.java
+@@ -0,0 +1,209 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.DayPinRole;
++import com.duszek.pindrop.entity.DayRole;
++import com.duszek.pindrop.entity.ExternalLinkType;
++import com.duszek.pindrop.entity.PhotoConfidence;
++import com.duszek.pindrop.entity.TimeFlexibility;
++import tools.jackson.databind.JsonNode;
++import tools.jackson.databind.json.JsonMapper;
++
++import java.time.LocalDate;
++import java.time.LocalTime;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Locale;
++
++public final class DayPlanJsonParser {
++
++	private DayPlanJsonParser() {
++	}
++
++	public static List<GeneratedDayPlan> parseDays(JsonMapper jsonMapper, String raw) {
++		JsonNode root = jsonMapper.readTree(extractJson(raw));
++		JsonNode daysNode = root.has("days") ? root.get("days") : root;
++		if (!daysNode.isArray()) {
++			throw new IllegalArgumentException("Day plan JSON is missing days[]");
++		}
++		List<GeneratedDayPlan> days = new ArrayList<>();
++		for (JsonNode dayNode : daysNode) {
++			days.add(parseDay(dayNode));
++		}
++		return days;
++	}
++
++	private static GeneratedDayPlan parseDay(JsonNode node) {
++		List<String> themes = new ArrayList<>();
++		if (node.get("themes") != null && node.get("themes").isArray()) {
++			node.get("themes").forEach(item -> {
++				if (!item.isNull()) {
++					themes.add(item.asString());
++				}
++			});
++		}
++		JsonNode statsNode = node.get("stats");
++		GeneratedDayPlan.Stats stats = new GeneratedDayPlan.Stats(
++				doubleOrNull(statsNode, "distanceKm"),
++				text(statsNode, "durationLabel"),
++				intOrNull(statsNode, "elevationM"),
++				intOrNull(statsNode, "costMin"),
++				intOrNull(statsNode, "costMax"),
++				firstNonBlank(text(statsNode, "currency"), "EUR"));
++
++		List<GeneratedDayPlan.GeneratedDayBlock> blocks = new ArrayList<>();
++		JsonNode blocksNode = node.get("blocks");
++		if (blocksNode != null && blocksNode.isArray()) {
++			blocksNode.forEach(block -> blocks.add(parseBlock(block)));
++		}
++
++		return new GeneratedDayPlan(
++				node.path("dayNumber").asInt(1),
++				parseDate(text(node, "date")),
++				text(node, "title"),
++				text(node, "narrative"),
++				themes,
++				enumOrNull(text(node, "dayRole"), DayRole.class),
++				text(node, "activityDomain"),
++				stats,
++				blocks);
++	}
++
++	private static GeneratedDayPlan.GeneratedDayBlock parseBlock(JsonNode node) {
++		List<GeneratedDayPlan.GeneratedDayLink> links = new ArrayList<>();
++		if (node.get("links") != null && node.get("links").isArray()) {
++			node.get("links").forEach(link -> {
++				String url = text(link, "url");
++				if (url != null) {
++					links.add(new GeneratedDayPlan.GeneratedDayLink(
++							enumOrDefault(text(link, "type"), ExternalLinkType.class, ExternalLinkType.OTHER),
++							url,
++							firstNonBlank(text(link, "label"), url)));
++				}
++			});
++		}
++		List<GeneratedDayPlan.GeneratedDayPin> pins = new ArrayList<>();
++		if (node.get("pins") != null && node.get("pins").isArray()) {
++			node.get("pins").forEach(pin -> pins.add(parsePin(pin)));
++		}
++		List<GeneratedDayPlan.GeneratedDayBlock> alternatives = new ArrayList<>();
++		if (node.get("alternatives") != null && node.get("alternatives").isArray()) {
++			node.get("alternatives").forEach(alt -> alternatives.add(parseBlock(alt)));
++		}
++		return new GeneratedDayPlan.GeneratedDayBlock(
++				enumOrDefault(text(node, "kind"), DayBlockKind.class, DayBlockKind.CITY_WALK),
++				parseTime(text(node, "startTime"), LocalTime.of(9, 0)),
++				parseTime(text(node, "endTime"), null),
++				enumOrNull(text(node, "flexibility"), TimeFlexibility.class),
++				firstNonBlank(text(node, "title"), "Untitled block"),
++				text(node, "narrative"),
++				text(node, "logistics"),
++				text(node, "costLabel"),
++				intOrNull(node, "costMin"),
++				intOrNull(node, "costMax"),
++				text(node, "photoUrl"),
++				enumOrNull(text(node, "photoConfidence"), PhotoConfidence.class),
++				text(node, "routeSummary"),
++				links,
++				pins,
++				alternatives);
++	}
++
++	private static GeneratedDayPlan.GeneratedDayPin parsePin(JsonNode node) {
++		return new GeneratedDayPlan.GeneratedDayPin(
++				firstNonBlank(text(node, "name"), "Unnamed pin"),
++				enumOrDefault(text(node, "role"), DayPinRole.class, DayPinRole.STOP),
++				doubleOrNull(node, "lat"),
++				doubleOrNull(node, "lng"),
++				text(node, "placeId"),
++				text(node, "mapsUrl"),
++				text(node, "address"),
++				text(node, "costLabel"));
++	}
++
++	private static String extractJson(String raw) {
++		if (raw == null) {
++			return "{}";
++		}
++		int start = raw.indexOf('{');
++		int end = raw.lastIndexOf('}');
++		if (start >= 0 && end > start) {
++			return raw.substring(start, end + 1);
++		}
++		return raw;
++	}
++
++	private static String text(JsonNode node, String field) {
++		if (node == null || node.isMissingNode() || node.isNull() || !node.has(field) || node.get(field).isNull()) {
++			return null;
++		}
++		String value = node.get(field).asString();
++		return value == null || value.isBlank() || "null".equalsIgnoreCase(value) ? null : value.trim();
++	}
++
++	private static Integer intOrNull(JsonNode node, String field) {
++		if (node == null || !node.has(field) || node.get(field).isNull()) {
++			return null;
++		}
++		try {
++			return node.get(field).asInt();
++		} catch (Exception ex) {
++			return null;
++		}
++	}
++
++	private static Double doubleOrNull(JsonNode node, String field) {
++		if (node == null || !node.has(field) || node.get(field).isNull()) {
++			return null;
++		}
++		try {
++			return node.get(field).asDouble();
++		} catch (Exception ex) {
++			return null;
++		}
++	}
++
++	private static LocalDate parseDate(String value) {
++		if (value == null) {
++			return LocalDate.now();
++		}
++		return LocalDate.parse(value.substring(0, Math.min(10, value.length())));
++	}
++
++	private static LocalTime parseTime(String value, LocalTime fallback) {
++		if (value == null || value.isBlank()) {
++			return fallback;
++		}
++		String trimmed = value.length() == 5 ? value + ":00" : value;
++		try {
++			return LocalTime.parse(trimmed);
++		} catch (Exception ex) {
++			return fallback;
++		}
++	}
++
++	private static <E extends Enum<E>> E enumOrNull(String value, Class<E> type) {
++		if (value == null) {
++			return null;
++		}
++		try {
++			return Enum.valueOf(type, value.trim().toUpperCase(Locale.ROOT));
++		} catch (IllegalArgumentException ex) {
++			return null;
++		}
++	}
++
++	private static <E extends Enum<E>> E enumOrDefault(String value, Class<E> type, E fallback) {
++		E parsed = enumOrNull(value, type);
++		return parsed != null ? parsed : fallback;
++	}
++
++	private static String firstNonBlank(String... values) {
++		for (String value : values) {
++			if (value != null && !value.isBlank()) {
++				return value;
++			}
++		}
++		return null;
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlaybooks.java b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlaybooks.java
+new file mode 100644
+index 0000000..6f6e8fb
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/DayPlaybooks.java
+@@ -0,0 +1,95 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.DayPinRole;
++
++import java.util.List;
++import java.util.Locale;
++import java.util.Set;
++
++public final class DayPlaybooks {
++
++	private DayPlaybooks() {
++	}
++
++	public record Playbook(DayBlockKind kind, List<DayPinRole> expectedPins, String promptHint) {
++	}
++
++	public static final Playbook TREK = new Playbook(
++			DayBlockKind.TREK,
++			List.of(DayPinRole.PARKING, DayPinRole.TRAILHEAD, DayPinRole.VIEWPOINT, DayPinRole.HUT),
++			"""
++					TREK playbook: one long time window (e.g. 08:30–17:00). Pins MUST include a named parking or trailhead, \
++					at least one viewpoint/summit, and a hut/refuge/restaurant on the trail when it exists. \
++					Add a shorter alternative (turn around at a named lake or hut). Never pin the destination city.""");
++
++	public static final Playbook CITY_WALK = new Playbook(
++			DayBlockKind.CITY_WALK,
++			List.of(DayPinRole.STOP, DayPinRole.VIEWPOINT),
++			"""
++					CITY_WALK playbook: a walking sequence with routeSummary like 'Praça do Comércio → Rua Augusta → Rossio'. \
++					Each stop is its own pin with a real street/square/building name and distinct coordinates.""");
++
++	public static final Playbook MUSEUM = new Playbook(
++			DayBlockKind.MUSEUM,
++			List.of(DayPinRole.MUSEUM, DayPinRole.RESTAURANT),
++			"""
++					MUSEUM playbook: a named museum/gallery pin plus nearby cafe/restaurant. Include ticket logistics and a TICKETS link when known.""");
++
++	public static final Playbook BEACH = new Playbook(
++			DayBlockKind.BEACH,
++			List.of(DayPinRole.BEACH, DayPinRole.RESTAURANT),
++			"""
++					BEACH playbook: a specific beach or cove name (not the city), access/parking pin if useful, and a beach bar or lunch pin.""");
++
++	public static final Playbook CAMP = new Playbook(
++			DayBlockKind.CAMP,
++			List.of(DayPinRole.CAMP, DayPinRole.SHOP, DayPinRole.TRAILHEAD),
++			"""
++					CAMP playbook: named campsite/bivouac, a grocery/shop for supplies, and an optional short trail from camp.""");
++
++	public static Playbook of(DayBlockKind kind) {
++		return switch (kind) {
++			case TREK -> TREK;
++			case CITY_WALK -> CITY_WALK;
++			case MUSEUM -> MUSEUM;
++			case BEACH -> BEACH;
++			case CAMP -> CAMP;
++			default -> new Playbook(kind, List.of(DayPinRole.STOP), kind.name() + " uses the same block+pins schema.");
++		};
++	}
++
++	public static DayBlockKind inferKind(List<String> interests, int dayIndex, int totalDays) {
++		Set<String> tags = interests == null
++				? Set.of()
++				: interests.stream().map(value -> value.toUpperCase(Locale.ROOT)).collect(java.util.stream.Collectors.toSet());
++		if (dayIndex == 0) {
++			return DayBlockKind.ARRIVAL;
++		}
++		if (dayIndex == totalDays - 1) {
++			return DayBlockKind.CITY_WALK;
++		}
++		if (containsAny(tags, "HIKING", "MOUNTAINS", "ADVENTURE", "SCENIC_VIEWS")) {
++			return DayBlockKind.TREK;
++		}
++		if (containsAny(tags, "BEACHES", "WATER_ACTIVITIES")) {
++			return DayBlockKind.BEACH;
++		}
++		if (containsAny(tags, "MUSEUMS", "CULTURE", "HISTORY", "ARCHITECTURE")) {
++			return DayBlockKind.MUSEUM;
++		}
++		if (containsAny(tags, "WILDLIFE")) {
++			return DayBlockKind.CAMP;
++		}
++		return DayBlockKind.CITY_WALK;
++	}
++
++	private static boolean containsAny(Set<String> tags, String... values) {
++		for (String value : values) {
++			if (tags.contains(value)) {
++				return true;
++			}
++		}
++		return false;
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/DeepDayPlanRequest.java b/src/main/java/com/duszek/pindrop/provider/dayplan/DeepDayPlanRequest.java
+new file mode 100644
+index 0000000..c84a0d0
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/DeepDayPlanRequest.java
+@@ -0,0 +1,10 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.provider.ai.TripPlanGenerationRequest;
++import com.duszek.pindrop.entity.ProposalType;
++
++public record DeepDayPlanRequest(
++		TripPlanGenerationRequest trip,
++		ProposalType proposalType,
++		Integer dayNumber) {
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanPromptBuilder.java b/src/main/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanPromptBuilder.java
+new file mode 100644
+index 0000000..e9dcb72
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanPromptBuilder.java
+@@ -0,0 +1,87 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.dto.planning.PreferenceProfile;
++import com.duszek.pindrop.entity.ProposalType;
++import com.duszek.pindrop.provider.ai.TripPlanGenerationRequest;
++
++public final class EditorialDayPlanPromptBuilder {
++
++	private EditorialDayPlanPromptBuilder() {
++	}
++
++	public static String systemPrompt() {
++		return """
++				You are Pindrop's editorial travel planner. You write days the way a knowledgeable local guide would: \
++				narrative first, then timed chapters, then specific map pins. Use web search for real venue names, \
++				trailheads, huts, museums, beaches, and restaurants. Return JSON only.
++				""";
++	}
++
++	public static String buildDeepPrompt(DeepDayPlanRequest request) {
++		TripPlanGenerationRequest trip = request.trip();
++		PreferenceProfile profile = trip.preferenceProfile();
++		String city = PinMapsUrlBuilder.destinationCity(trip.destination());
++		ProposalType type = request.proposalType() != null ? request.proposalType() : ProposalType.BALANCED;
++		String dayFilter = request.dayNumber() != null
++				? "Generate ONLY dayNumber " + request.dayNumber() + "."
++				: "Generate every day from startDate to endDate inclusive.";
++
++		return """
++				Return JSON only with this shape:
++				{"days":[{"dayNumber":1,"date":"%s","title":"...","narrative":"2-3 sentences of context","themes":["..."],"dayRole":"ARRIVAL|EXPLORE|EXCURSION|RELAX|DEPARTURE","activityDomain":"MOUNTAIN_TRAIL|CITY_WALKING|MUSEUM_GALLERY|BEACH_LEISURE|FOOD_DINING","stats":{"distanceKm":11.0,"durationLabel":"8 h","elevationM":820,"costMin":40,"costMax":65,"currency":"EUR"},"blocks":[{"kind":"TREK|CITY_WALK|MUSEUM|BEACH|CAMP|FOOD|TRANSIT|EVENING|REST|ARRIVAL","startTime":"08:30","endTime":"17:00","flexibility":"FIXED|FLEXIBLE|WINDOW","title":"Concrete place or trail name","narrative":"What happens in this window","logistics":"tickets, parking, cash, reservation","costLabel":"€12–18","costMin":12,"costMax":18,"routeSummary":"Stop A → Stop B → Stop C","links":[{"type":"ALLTRAILS|YOUTUBE|ARTICLE|TICKETS|WIKILOC|MAPS|OTHER","url":"https://...","label":"..."}],"pins":[{"name":"Unique venue name","role":"PARKING|TRAILHEAD|VIEWPOINT|HUT|RESTAURANT|SHOP|BEACH|MUSEUM|CAMP|LODGING|STOP","lat":49.213,"lng":20.071,"address":"street if known","costLabel":null}],"alternatives":[{"kind":"TREK","startTime":"08:30","endTime":"13:00","title":"Shorter option to a named place","narrative":"...","pins":[],"links":[],"alternatives":[]}]}]}]}
++
++				HARD RULES:
++				- Never use the destination city (%s) as a pin name.
++				- Never write generic titles like "Meal in %s", "Check in and orient", "Local cuisine in %s".
++				- Every CORE block (TREK, CITY_WALK, MUSEUM, BEACH, CAMP, FOOD) needs unique pins with distinct lat/lng.
++				- Two pins in the same day must not share coordinates and must resolve to different maps queries.
++				- Prefer real researched names (trailheads, huts, museums, plazas, coves). Include coordinates.
++				- Photos are not your job; omit photoUrl.
++				- %s
++
++				PLAYBOOKS (pick kind per block; same JSON schema for all):
++				%s
++				%s
++				%s
++				%s
++				%s
++
++				Destination: %s (lat %s, lng %s)
++				Dates: %s to %s
++				Proposal variant: %s
++				Interests: %s
++				Preferences: pace=%s budget=%s transport=%s extra=%s
++				""".formatted(
++				trip.startDate(),
++				city,
++				city,
++				city,
++				dayFilter,
++				DayPlaybooks.TREK.promptHint(),
++				DayPlaybooks.CITY_WALK.promptHint(),
++				DayPlaybooks.MUSEUM.promptHint(),
++				DayPlaybooks.BEACH.promptHint(),
++				DayPlaybooks.CAMP.promptHint(),
++				trip.destination(),
++				trip.lat(),
++				trip.lng(),
++				trip.startDate(),
++				trip.endDate(),
++				type,
++				trip.interests(),
++				profile != null ? profile.getPace() : "BALANCED",
++				profile != null ? profile.getBudgetStyle() : "MID_RANGE",
++				profile != null ? profile.getTransportModes() : java.util.Set.of(),
++				profile != null && profile.getAdditionalRequirements() != null
++						? profile.getAdditionalRequirements()
++						: "none");
++	}
++
++	public static String retryPrompt(String previousErrors) {
++		return """
++				Your previous day plan was rejected. Fix EVERY issue and return JSON only. Do not use destination-named pins. \
++				Give each pin unique coordinates. Issues:
++				%s
++				""".formatted(previousErrors);
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanStub.java b/src/main/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanStub.java
+new file mode 100644
+index 0000000..6fcf027
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanStub.java
+@@ -0,0 +1,358 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.DayPinRole;
++import com.duszek.pindrop.entity.DayRole;
++import com.duszek.pindrop.entity.ExternalLinkType;
++import com.duszek.pindrop.entity.ProposalType;
++import com.duszek.pindrop.entity.TimeFlexibility;
++import com.duszek.pindrop.provider.ai.TripPlanGenerationRequest;
++import org.springframework.stereotype.Component;
++
++import java.time.LocalDate;
++import java.time.LocalTime;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Locale;
++
++@Component
++public class EditorialDayPlanStub {
++
++	public List<GeneratedDayPlan> generate(DeepDayPlanRequest request) {
++		TripPlanGenerationRequest trip = request.trip();
++		int totalDays = (int) java.time.temporal.ChronoUnit.DAYS.between(trip.startDate(), trip.endDate()) + 1;
++		totalDays = Math.max(1, totalDays);
++		List<GeneratedDayPlan> days = new ArrayList<>();
++		for (int i = 0; i < totalDays; i++) {
++			int dayNumber = i + 1;
++			if (request.dayNumber() != null && request.dayNumber() != dayNumber) {
++				continue;
++			}
++			days.add(buildDay(trip, request.proposalType(), dayNumber, totalDays));
++		}
++		return days;
++	}
++
++	private GeneratedDayPlan buildDay(
++			TripPlanGenerationRequest trip,
++			ProposalType proposalType,
++			int dayNumber,
++			int totalDays) {
++		String city = PinMapsUrlBuilder.destinationCity(trip.destination());
++		String country = PinMapsUrlBuilder.destinationCountry(trip.destination());
++		String region = country != null ? country : city;
++		DayBlockKind focus = DayPlaybooks.inferKind(trip.interests(), dayNumber - 1, totalDays);
++		if (proposalType == ProposalType.INTENSE && focus == DayBlockKind.CITY_WALK && dayNumber > 1) {
++			focus = DayBlockKind.TREK;
++		}
++		if (proposalType == ProposalType.RELAXED && focus == DayBlockKind.TREK) {
++			focus = DayBlockKind.BEACH;
++		}
++
++		LocalDate date = trip.startDate().plusDays(dayNumber - 1);
++		double baseLat = trip.lat();
++		double baseLng = trip.lng();
++		List<GeneratedDayPlan.GeneratedDayBlock> blocks = switch (focus) {
++			case TREK -> trekBlocks(city, region, baseLat, baseLng, dayNumber);
++			case BEACH -> beachBlocks(city, region, baseLat, baseLng, dayNumber);
++			case MUSEUM -> museumBlocks(city, region, baseLat, baseLng, dayNumber);
++			case CAMP -> campBlocks(city, region, baseLat, baseLng, dayNumber);
++			case ARRIVAL -> arrivalBlocks(city, region, baseLat, baseLng, dayNumber);
++			default -> cityWalkBlocks(city, region, baseLat, baseLng, dayNumber);
++		};
++
++		GeneratedDayPlan.Stats stats = switch (focus) {
++			case TREK -> new GeneratedDayPlan.Stats(14.0, "8–9 h on trail", 1100, 25, 40, "EUR");
++			case BEACH -> new GeneratedDayPlan.Stats(6.0, "5 h by the water", null, 20, 45, "EUR");
++			case MUSEUM -> new GeneratedDayPlan.Stats(7.0, "6 h in town", null, 35, 70, "EUR");
++			case CAMP -> new GeneratedDayPlan.Stats(8.0, "camp + short loop", 240, 15, 35, "EUR");
++			default -> new GeneratedDayPlan.Stats(7.0, "~6 h walking", null, 40, 75, "EUR");
++		};
++
++		return new GeneratedDayPlan(
++				dayNumber,
++				date,
++				titleFor(focus, city, dayNumber),
++				narrativeFor(focus, city),
++				themesFor(focus, city),
++				dayRoleFor(focus, dayNumber, totalDays),
++				domainFor(focus),
++				stats,
++				blocks);
++	}
++
++	private List<GeneratedDayPlan.GeneratedDayBlock> trekBlocks(
++			String city, String region, double lat, double lng, int dayNumber) {
++		GeneratedDayPlan.GeneratedDayPin parking = pin(
++				named(city, "Valley trailhead parking"), DayPinRole.PARKING, offset(lat, lng, dayNumber, 1),
++				null, "Arrive before 08:00 — lot fills early");
++		GeneratedDayPlan.GeneratedDayPin trailhead = pin(
++				named(city, "Ridge trailhead"), DayPinRole.TRAILHEAD, offset(lat, lng, dayNumber, 2),
++				null, null);
++		GeneratedDayPlan.GeneratedDayPin viewpoint = pin(
++				named(city, "High tarn overlook"), DayPinRole.VIEWPOINT, offset(lat, lng, dayNumber, 3),
++				null, null);
++		GeneratedDayPlan.GeneratedDayPin hut = pin(
++				named(city, "Mountain hut"), DayPinRole.HUT, offset(lat, lng, dayNumber, 4),
++				null, "Lunch €12–18");
++		GeneratedDayPlan.GeneratedDayBlock shortcut = block(
++				DayBlockKind.TREK, LocalTime.of(8, 30), LocalTime.of(13, 0),
++				"Shorter loop to the tarn",
++				"Turn around at the overlook if weather or legs say so.",
++				null, List.of(trailhead, viewpoint), List.of());
++		GeneratedDayPlan.GeneratedDayBlock trek = block(
++				DayBlockKind.TREK, LocalTime.of(8, 30), LocalTime.of(17, 0),
++				named(city, "Ridge traverse"),
++				"Main day on the trail. Own pace; carry 2 L of water. Shortcut: turn around at the tarn.",
++				"National-park ticket if in season. Hut takes cash.",
++				List.of(parking, trailhead, viewpoint, hut),
++				List.of(shortcut));
++		trek = withLinks(trek, List.of(
++				new GeneratedDayPlan.GeneratedDayLink(
++						ExternalLinkType.ALLTRAILS, "https://www.alltrails.com", "Trail notes"),
++				new GeneratedDayPlan.GeneratedDayLink(
++						ExternalLinkType.ARTICLE, "https://www.outdooractive.com", "Route article")));
++		GeneratedDayPlan.GeneratedDayBlock shop = block(
++				DayBlockKind.EVENING, LocalTime.of(18, 30), LocalTime.of(20, 0),
++				named(city, "Village grocery"),
++				"Resupply water and snacks. Optional village stroll — do not pin the destination city.",
++				"Card usually fine; bakery closes ~19:00.",
++				List.of(pin(named(city, "Village grocery"), DayPinRole.SHOP, offset(lat, lng, dayNumber, 5), null, null)),
++				List.of());
++		return List.of(
++				transitBlock(city, region, lat, lng, dayNumber),
++				trek,
++				shop);
++	}
++
++	private List<GeneratedDayPlan.GeneratedDayBlock> cityWalkBlocks(
++			String city, String region, double lat, double lng, int dayNumber) {
++		GeneratedDayPlan.GeneratedDayPin a = pin(named(city, "Harbor square"), DayPinRole.STOP, offset(lat, lng, dayNumber, 1), null, null);
++		GeneratedDayPlan.GeneratedDayPin b = pin(named(city, "Arcade street"), DayPinRole.STOP, offset(lat, lng, dayNumber, 2), null, null);
++		GeneratedDayPlan.GeneratedDayPin c = pin(named(city, "Hill viewpoint"), DayPinRole.VIEWPOINT, offset(lat, lng, dayNumber, 3), null, null);
++		GeneratedDayPlan.GeneratedDayPin lunch = pin(named(city, "Family tasca"), DayPinRole.RESTAURANT, offset(lat, lng, dayNumber, 4), "cash preferred", "€15–25");
++		GeneratedDayPlan.GeneratedDayBlock walk = block(
++				DayBlockKind.CITY_WALK, LocalTime.of(9, 30), LocalTime.of(13, 0),
++				named(city, "Old town loop"),
++				"Unhurried walk through the historic core. Pause for photos at the viewpoint.",
++				null,
++				List.of(a, b, c),
++				List.of());
++		walk = walk.withPins(walk.pins());
++		GeneratedDayPlan.GeneratedDayBlock food = block(
++				DayBlockKind.FOOD, LocalTime.of(13, 15), LocalTime.of(14, 45),
++				named(city, "Family tasca"),
++				"Small dining room, daily board. Cash only at lunch.",
++				"No reservation needed before 13:30.",
++				List.of(lunch),
++				List.of());
++		GeneratedDayPlan.GeneratedDayBlock evening = block(
++				DayBlockKind.EVENING, LocalTime.of(18, 30), LocalTime.of(21, 0),
++				named(city, "Riverfront sunset"),
++				"Golden hour along the water, then a glass nearby.",
++				null,
++				List.of(pin(named(city, "Riverfront belvedere"), DayPinRole.VIEWPOINT, offset(lat, lng, dayNumber, 5), null, null)),
++				List.of());
++		return List.of(walk.withAlternatives(walk.alternatives()), food, evening);
++	}
++
++	private List<GeneratedDayPlan.GeneratedDayBlock> museumBlocks(
++			String city, String region, double lat, double lng, int dayNumber) {
++		GeneratedDayPlan.GeneratedDayPin museum = pin(
++				named(city, "City museum"), DayPinRole.MUSEUM, offset(lat, lng, dayNumber, 1), null, "€8–14");
++		GeneratedDayPlan.GeneratedDayPin cafe = pin(
++				named(city, "Museum cafe"), DayPinRole.RESTAURANT, offset(lat, lng, dayNumber, 2), null, "€6–12");
++		GeneratedDayPlan.GeneratedDayBlock visit = withLinks(block(
++				DayBlockKind.MUSEUM, LocalTime.of(10, 0), LocalTime.of(13, 0),
++				named(city, "City museum"),
++				"Morning in the permanent collection. Buy timed tickets if the queue looks long.",
++				"Cloakroom for bags. Last entry 30 minutes before close.",
++				List.of(museum, cafe),
++				List.of()),
++				List.of(new GeneratedDayPlan.GeneratedDayLink(
++						ExternalLinkType.TICKETS, "https://www.google.com/search?q=" + named(city, "museum tickets"),
++						"Tickets")));
++		GeneratedDayPlan.GeneratedDayBlock walk = block(
++				DayBlockKind.CITY_WALK, LocalTime.of(14, 30), LocalTime.of(17, 30),
++				named(city, "Gallery quarter"),
++				"After the museum, wander the surrounding streets and a second smaller gallery.",
++				null,
++				List.of(
++						pin(named(city, "Side-street gallery"), DayPinRole.MUSEUM, offset(lat, lng, dayNumber, 3), null, null),
++						pin(named(city, "Ceramic workshop courtyard"), DayPinRole.STOP, offset(lat, lng, dayNumber, 4), null, null)),
++				List.of());
++		return List.of(visit, walk);
++	}
++
++	private List<GeneratedDayPlan.GeneratedDayBlock> beachBlocks(
++			String city, String region, double lat, double lng, int dayNumber) {
++		GeneratedDayPlan.GeneratedDayPin beach = pin(
++				named(city, "Cove beach"), DayPinRole.BEACH, offset(lat, lng, dayNumber, 1), null, null);
++		GeneratedDayPlan.GeneratedDayPin parking = pin(
++				named(city, "Cove parking"), DayPinRole.PARKING, offset(lat, lng, dayNumber, 2), null, "Paid from 09:00");
++		GeneratedDayPlan.GeneratedDayPin lunch = pin(
++				named(city, "Beach shack"), DayPinRole.RESTAURANT, offset(lat, lng, dayNumber, 3), "cash", "€12–20");
++		GeneratedDayPlan.GeneratedDayBlock swim = block(
++				DayBlockKind.BEACH, LocalTime.of(10, 0), LocalTime.of(16, 0),
++				named(city, "Cove beach day"),
++				"Swim and shade. Bring water; the shack closes if wind picks up.",
++				"No lifeguard after 18:00.",
++				List.of(parking, beach, lunch),
++				List.of());
++		return List.of(swim);
++	}
++
++	private List<GeneratedDayPlan.GeneratedDayBlock> campBlocks(
++			String city, String region, double lat, double lng, int dayNumber) {
++		GeneratedDayPlan.GeneratedDayPin camp = pin(
++				named(city, "Pine clearing campsite"), DayPinRole.CAMP, offset(lat, lng, dayNumber, 1), null, null);
++		GeneratedDayPlan.GeneratedDayPin shop = pin(
++				named(city, "Trail grocery"), DayPinRole.SHOP, offset(lat, lng, dayNumber, 2), null, null);
++		GeneratedDayPlan.GeneratedDayPin trail = pin(
++				named(city, "Camp loop trailhead"), DayPinRole.TRAILHEAD, offset(lat, lng, dayNumber, 3), null, null);
++		return List.of(
++				block(DayBlockKind.CAMP, LocalTime.of(16, 0), LocalTime.of(20, 0),
++						named(city, "Pitch camp"),
++						"Set camp, cook, and a short dusk loop from the trailhead.",
++						"Quiet hours from 22:00. Water tap by the warden hut.",
++						List.of(shop, camp, trail),
++						List.of()));
++	}
++
++	private List<GeneratedDayPlan.GeneratedDayBlock> arrivalBlocks(
++			String city, String region, double lat, double lng, int dayNumber) {
++		GeneratedDayPlan.GeneratedDayPin lodging = pin(
++				named(city, "Hillside guesthouse"), DayPinRole.LODGING, offset(lat, lng, dayNumber, 1), null, null);
++		GeneratedDayPlan.GeneratedDayPin dinner = pin(
++				named(city, "Station tavern"), DayPinRole.RESTAURANT, offset(lat, lng, dayNumber, 2), null, "€18–28");
++		return List.of(
++				block(DayBlockKind.ARRIVAL, LocalTime.of(15, 0), LocalTime.of(17, 0),
++						named(city, "Drop bags and orient"),
++						"Check in, unpack, and a short walk to understand the neighborhood — not a destination pin.",
++						"Confirm breakfast hours with the host.",
++						List.of(lodging),
++						List.of()),
++				block(DayBlockKind.FOOD, LocalTime.of(19, 0), LocalTime.of(21, 0),
++						named(city, "Station tavern"),
++						"Simple first-night dinner walking distance from the guesthouse.",
++						null,
++						List.of(dinner),
++						List.of()));
++	}
++
++	private GeneratedDayPlan.GeneratedDayBlock transitBlock(
++			String city, String region, double lat, double lng, int dayNumber) {
++		return block(
++				DayBlockKind.TRANSIT, LocalTime.of(7, 0), LocalTime.of(8, 0),
++				"Drive to the trailhead",
++				"Leave before the parking fills. Fill bottles in town.",
++				null,
++				List.of(pin(named(city, "Valley trailhead parking"), DayPinRole.PARKING, offset(lat, lng, dayNumber, 1), null, null)),
++				List.of());
++	}
++
++	private static GeneratedDayPlan.GeneratedDayBlock withLinks(
++			GeneratedDayPlan.GeneratedDayBlock block,
++			List<GeneratedDayPlan.GeneratedDayLink> links) {
++		return new GeneratedDayPlan.GeneratedDayBlock(
++				block.kind(), block.startTime(), block.endTime(), block.flexibility(), block.title(),
++				block.narrative(), block.logistics(), block.costLabel(), block.costMin(), block.costMax(),
++				block.photoUrl(), block.photoConfidence(), block.routeSummary(), links, block.pins(), block.alternatives());
++	}
++
++	private static GeneratedDayPlan.GeneratedDayBlock block(
++			DayBlockKind kind,
++			LocalTime start,
++			LocalTime end,
++			String title,
++			String narrative,
++			String logistics,
++			List<GeneratedDayPlan.GeneratedDayPin> pins,
++			List<GeneratedDayPlan.GeneratedDayBlock> alternatives) {
++		String route = kind == DayBlockKind.CITY_WALK && pins.size() >= 2
++				? pins.stream().map(GeneratedDayPlan.GeneratedDayPin::name).reduce((a, b) -> a + " → " + b).orElse(null)
++				: null;
++		return new GeneratedDayPlan.GeneratedDayBlock(
++				kind, start, end, TimeFlexibility.FIXED, title, narrative, logistics, null, null, null,
++				null, null, route, List.of(), pins, alternatives);
++	}
++
++	private static GeneratedDayPlan.GeneratedDayPin pin(
++			String name, DayPinRole role, double[] coords, String address, String cost) {
++		return new GeneratedDayPlan.GeneratedDayPin(
++				name, role, coords[0], coords[1], null, null, address, cost);
++	}
++
++	private static double[] offset(double lat, double lng, int dayNumber, int pinIndex) {
++		double dLat = (dayNumber * 0.012) + (pinIndex * 0.008);
++		double dLng = (dayNumber * 0.009) - (pinIndex * 0.006);
++		return new double[] { lat + dLat, lng + dLng };
++	}
++
++	private static String named(String city, String feature) {
++		return feature + " near " + city;
++	}
++
++	private static String titleFor(DayBlockKind kind, String city, int dayNumber) {
++		return switch (kind) {
++			case TREK -> "Ridge day · Early start · Hut lunch";
++			case BEACH -> "Cove swim · Slow afternoon";
++			case MUSEUM -> "Museum morning · Gallery streets";
++			case CAMP -> "Camp pitch · Dusk loop";
++			case ARRIVAL -> "Arrive · Neighborhood dinner";
++			default -> city + " on foot · Day " + dayNumber;
++		};
++	}
++
++	private static String narrativeFor(DayBlockKind kind, String city) {
++		return switch (kind) {
++			case TREK -> "Long mountain day outside " + city + ". Start before 8:00 — parking fills quickly. Carry lunch or eat at the hut.";
++			case BEACH -> "A specific cove rather than the city waterfront. Shade by midday; lunch at the shack on the sand.";
++			case MUSEUM -> "One major collection in the morning, then the streets around it. Tickets in advance on weekends.";
++			case CAMP -> "Pitch among the pines, shop for dinner, and a short loop from camp before dark.";
++			case ARRIVAL -> "Land, drop bags at a named guesthouse, and eat nearby. Keep the first evening light.";
++			default -> "A walking day through named streets and squares — not a generic loop of " + city + ".";
++		};
++	}
++
++	private static List<String> themesFor(DayBlockKind kind, String city) {
++		return switch (kind) {
++			case TREK -> List.of("Ridge traverse", "Early start", "Hut lunch");
++			case BEACH -> List.of("Cove swim", "Slow lunch");
++			case MUSEUM -> List.of("Permanent collection", "Gallery streets");
++			case CAMP -> List.of("Pitch camp", "Dusk loop");
++			case ARRIVAL -> List.of("Check-in", "First dinner");
++			default -> List.of("Old town", "Local table");
++		};
++	}
++
++	private static DayRole dayRoleFor(DayBlockKind kind, int dayNumber, int totalDays) {
++		if (dayNumber == 1) {
++			return DayRole.ARRIVAL;
++		}
++		if (dayNumber == totalDays) {
++			return DayRole.DEPARTURE;
++		}
++		return switch (kind) {
++			case TREK -> DayRole.EXCURSION;
++			case BEACH, CAMP -> DayRole.RELAX;
++			default -> DayRole.EXPLORE;
++		};
++	}
++
++	private static String domainFor(DayBlockKind kind) {
++		return switch (kind) {
++			case TREK -> "MOUNTAIN_TRAIL";
++			case MUSEUM -> "MUSEUM_GALLERY";
++			case BEACH -> "BEACH_LEISURE";
++			case CAMP -> "UNSTRUCTURED";
++			case FOOD -> "FOOD_DINING";
++			default -> "CITY_WALKING";
++		};
++	}
++
++	@SuppressWarnings("unused")
++	private static String localeCity(String city) {
++		return city == null ? "" : city.toLowerCase(Locale.ROOT);
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/GeneratedDayPlan.java b/src/main/java/com/duszek/pindrop/provider/dayplan/GeneratedDayPlan.java
+new file mode 100644
+index 0000000..066a2d5
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/GeneratedDayPlan.java
+@@ -0,0 +1,118 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.DayPinRole;
++import com.duszek.pindrop.entity.DayRole;
++import com.duszek.pindrop.entity.ExternalLinkType;
++import com.duszek.pindrop.entity.PhotoConfidence;
++import com.duszek.pindrop.entity.TimeFlexibility;
++
++import java.time.LocalDate;
++import java.time.LocalTime;
++import java.util.ArrayList;
++import java.util.List;
++
++public record GeneratedDayPlan(
++		int dayNumber,
++		LocalDate date,
++		String title,
++		String narrative,
++		List<String> themes,
++		DayRole dayRole,
++		String activityDomain,
++		Stats stats,
++		List<GeneratedDayBlock> blocks) {
++
++	public record Stats(
++			Double distanceKm,
++			String durationLabel,
++			Integer elevationM,
++			Integer costMin,
++			Integer costMax,
++			String currency) {
++	}
++
++	public record GeneratedDayBlock(
++			DayBlockKind kind,
++			LocalTime startTime,
++			LocalTime endTime,
++			TimeFlexibility flexibility,
++			String title,
++			String narrative,
++			String logistics,
++			String costLabel,
++			Integer costMin,
++			Integer costMax,
++			String photoUrl,
++			PhotoConfidence photoConfidence,
++			String routeSummary,
++			List<GeneratedDayLink> links,
++			List<GeneratedDayPin> pins,
++			List<GeneratedDayBlock> alternatives) {
++
++		public GeneratedDayBlock withPins(List<GeneratedDayPin> nextPins) {
++			return new GeneratedDayBlock(
++					kind, startTime, endTime, flexibility, title, narrative, logistics, costLabel,
++					costMin, costMax, photoUrl, photoConfidence, routeSummary, links, nextPins, alternatives);
++		}
++
++		public GeneratedDayBlock withPhoto(String url, PhotoConfidence confidence) {
++			return new GeneratedDayBlock(
++					kind, startTime, endTime, flexibility, title, narrative, logistics, costLabel,
++					costMin, costMax, url, confidence, routeSummary, links, pins, alternatives);
++		}
++
++		public GeneratedDayBlock withAlternatives(List<GeneratedDayBlock> nextAlts) {
++			return new GeneratedDayBlock(
++					kind, startTime, endTime, flexibility, title, narrative, logistics, costLabel,
++					costMin, costMax, photoUrl, photoConfidence, routeSummary, links, pins, nextAlts);
++		}
++	}
++
++	public record GeneratedDayPin(
++			String name,
++			DayPinRole role,
++			Double lat,
++			Double lng,
++			String placeId,
++			String mapsUrl,
++			String address,
++			String costLabel) {
++
++		public GeneratedDayPin withMaps(String nextMapsUrl) {
++			return new GeneratedDayPin(name, role, lat, lng, placeId, nextMapsUrl, address, costLabel);
++		}
++
++		public GeneratedDayPin enriched(
++				String nextName,
++				DayPinRole nextRole,
++				Double nextLat,
++				Double nextLng,
++				String nextPlaceId,
++				String nextMapsUrl,
++				String nextAddress,
++				String nextCostLabel) {
++			return new GeneratedDayPin(
++					nextName != null ? nextName : name,
++					nextRole != null ? nextRole : role,
++					nextLat,
++					nextLng,
++					nextPlaceId,
++					nextMapsUrl,
++					nextAddress,
++					nextCostLabel != null ? nextCostLabel : costLabel);
++		}
++	}
++
++	public record GeneratedDayLink(ExternalLinkType type, String url, String label) {
++	}
++
++	public GeneratedDayPlan withBlocks(List<GeneratedDayBlock> nextBlocks) {
++		return new GeneratedDayPlan(
++				dayNumber, date, title, narrative, themes, dayRole, activityDomain, stats, nextBlocks);
++	}
++
++	public static List<GeneratedDayPin> emptyPins() {
++		return new ArrayList<>();
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/dayplan/PinMapsUrlBuilder.java b/src/main/java/com/duszek/pindrop/provider/dayplan/PinMapsUrlBuilder.java
+new file mode 100644
+index 0000000..64013e3
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/provider/dayplan/PinMapsUrlBuilder.java
+@@ -0,0 +1,113 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import java.net.URLEncoder;
++import java.nio.charset.StandardCharsets;
++import java.util.Locale;
++import java.util.Objects;
++
++public final class PinMapsUrlBuilder {
++
++	private PinMapsUrlBuilder() {
++	}
++
++	public static boolean isDestinationOnlyName(String name, String destination) {
++		String normalizedName = normalize(name);
++		String city = normalize(destinationCity(destination));
++		return !normalizedName.isBlank() && !city.isBlank() && normalizedName.equals(city);
++	}
++
++	public static String build(GeneratedDayPlan.GeneratedDayPin pin, String destination) {
++		if (pin.placeId() != null && !pin.placeId().isBlank()) {
++			return "https://www.google.com/maps/search/?api=1&query_place_id="
++					+ encode(pin.placeId().trim());
++		}
++		if (hasCoords(pin)) {
++			return "https://www.google.com/maps/search/?api=1&query=" + pin.lat() + "," + pin.lng();
++		}
++
++		String name = blankToEmpty(pin.name());
++		String address = blankToEmpty(pin.address());
++		String country = destinationCountry(destination);
++		String city = destinationCity(destination);
++
++		if (!name.isBlank() && !address.isBlank() && !normalize(name).equals(normalize(address))) {
++			String query = country != null && !address.toLowerCase(Locale.ROOT).contains(country.toLowerCase(Locale.ROOT))
++					? name + ", " + address + ", " + country
++					: name + ", " + address;
++			return mapsQuery(query);
++		}
++
++		if (!name.isBlank() && !isDestinationOnlyName(name, destination) && destination != null && !destination.isBlank()) {
++			return mapsQuery(name + ", " + destination);
++		}
++
++		if (!name.isBlank() && country != null) {
++			return mapsQuery(name + ", " + country);
++		}
++
++		if (destination != null && !destination.isBlank()) {
++			return mapsQuery(destination);
++		}
++
++		if (city != null) {
++			return mapsQuery(city);
++		}
++
++		return pin.mapsUrl() != null ? pin.mapsUrl() : "";
++	}
++
++	public static GeneratedDayPlan.GeneratedDayPin withResolvedUrl(
++			GeneratedDayPlan.GeneratedDayPin pin,
++			String destination) {
++		String url = build(pin, destination);
++		return pin.withMaps(url.isBlank() ? pin.mapsUrl() : url);
++	}
++
++	public static boolean hasCoords(GeneratedDayPlan.GeneratedDayPin pin) {
++		return pin.lat() != null && pin.lng() != null
++				&& (Math.abs(pin.lat()) > 0.0001 || Math.abs(pin.lng()) > 0.0001);
++	}
++
++	public static String destinationCity(String destination) {
++		if (destination == null || destination.isBlank()) {
++			return null;
++		}
++		return destination.split(",")[0].trim();
++	}
++
++	public static String destinationCountry(String destination) {
++		if (destination == null || destination.isBlank()) {
++			return null;
++		}
++		String[] parts = destination.split(",");
++		return parts.length > 1 ? parts[parts.length - 1].trim() : null;
++	}
++
++	public static String normalize(String value) {
++		return value == null ? "" : value.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
++	}
++
++	private static String mapsQuery(String query) {
++		return "https://www.google.com/maps/search/?api=1&query=" + encode(query);
++	}
++
++	private static String encode(String value) {
++		return URLEncoder.encode(value, StandardCharsets.UTF_8);
++	}
++
++	private static String blankToEmpty(String value) {
++		return value == null ? "" : value.trim();
++	}
++
++	public static boolean sameCoords(GeneratedDayPlan.GeneratedDayPin left, GeneratedDayPlan.GeneratedDayPin right) {
++		if (!hasCoords(left) || !hasCoords(right)) {
++			return false;
++		}
++		return Objects.equals(round6(left.lat()), round6(right.lat()))
++				&& Objects.equals(round6(left.lng()), round6(right.lng()));
++	}
++
++	private static double round6(double value) {
++		return Math.round(value * 1_000_000d) / 1_000_000d;
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/provider/places/GooglePlacesClient.java b/src/main/java/com/duszek/pindrop/provider/places/GooglePlacesClient.java
+index 70a9ee8..4c9ca9d 100644
+--- a/src/main/java/com/duszek/pindrop/provider/places/GooglePlacesClient.java
++++ b/src/main/java/com/duszek/pindrop/provider/places/GooglePlacesClient.java
+@@ -18,7 +18,7 @@ import java.util.Optional;
+ public class GooglePlacesClient {
+ 
+ 	private static final String FIELD_MASK =
+-			"places.displayName,places.formattedAddress,places.location,places.addressComponents,places.photos";
++			"places.id,places.displayName,places.formattedAddress,places.location,places.addressComponents,places.photos";
+ 
+ 	private final AppProperties appProperties;
+ 	private final WebClient webClient;
+@@ -37,13 +37,23 @@ public class GooglePlacesClient {
+ 	}
+ 
+ 	public List<PlaceSearchResult> search(String query, int limit) {
++		return search(query, limit, null, null);
++	}
++
++	public List<PlaceSearchResult> search(String query, int limit, Double lat, Double lng) {
+ 		if (!isConfigured() || query == null || query.isBlank()) {
+ 			return List.of();
+ 		}
+ 		try {
+-			Map<String, Object> body = Map.of(
+-					"textQuery", query,
+-					"maxResultCount", Math.min(limit, 20));
++			Map<String, Object> body = new java.util.LinkedHashMap<>();
++			body.put("textQuery", query);
++			body.put("maxResultCount", Math.min(limit, 20));
++			if (lat != null && lng != null) {
++				body.put("locationBias", Map.of(
++						"circle", Map.of(
++								"center", Map.of("latitude", lat, "longitude", lng),
++								"radius", 50_000.0)));
++			}
+ 
+ 			@SuppressWarnings("unchecked")
+ 			Map<String, Object> response = webClient.post()
+@@ -110,8 +120,9 @@ public class GooglePlacesClient {
+ 				extractAddressComponent(addressComponents, "administrative_area_level_2"));
+ 
+ 		String photoUrl = extractPhotoUrl(place.get("photos"));
++		String placeId = extractPlaceId(place.get("id"));
+ 
+-		return PlaceSearchResult.of(name, region, country, countryCode, lat, lng, photoUrl);
++		return PlaceSearchResult.of(name, region, country, countryCode, lat, lng, photoUrl, null, placeId);
+ 	}
+ 
+ 	@SuppressWarnings("unchecked")
+@@ -178,6 +189,14 @@ public class GooglePlacesClient {
+ 		return trimmed;
+ 	}
+ 
++	static String extractPlaceId(Object idObject) {
++		String raw = PlaceFormatting.blankToNull(idObject != null ? String.valueOf(idObject) : null);
++		if (raw == null) {
++			return null;
++		}
++		return raw.startsWith("places/") ? raw.substring("places/".length()) : raw;
++	}
++
+ 	@SuppressWarnings("unchecked")
+ 	private static String extractDisplayName(Object displayNameObject) {
+ 		if (displayNameObject instanceof Map<?, ?> displayNameMap) {
+diff --git a/src/main/java/com/duszek/pindrop/provider/places/PlaceSearchResult.java b/src/main/java/com/duszek/pindrop/provider/places/PlaceSearchResult.java
+index 3d2d6d2..01cb771 100644
+--- a/src/main/java/com/duszek/pindrop/provider/places/PlaceSearchResult.java
++++ b/src/main/java/com/duszek/pindrop/provider/places/PlaceSearchResult.java
+@@ -9,7 +9,8 @@ public record PlaceSearchResult(
+ 		double lat,
+ 		double lng,
+ 		String photoUrl,
+-		String placeType) {
++		String placeType,
++		String placeId) {
+ 
+ 	public static PlaceSearchResult of(
+ 			String name,
+@@ -41,6 +42,19 @@ public record PlaceSearchResult(
+ 			double lng,
+ 			String photoUrl,
+ 			String placeType) {
++		return of(name, region, country, countryCode, lat, lng, photoUrl, placeType, null);
++	}
++
++	public static PlaceSearchResult of(
++			String name,
++			String region,
++			String country,
++			String countryCode,
++			double lat,
++			double lng,
++			String photoUrl,
++			String placeType,
++			String placeId) {
+ 		return new PlaceSearchResult(
+ 				name,
+ 				region,
+@@ -50,10 +64,17 @@ public record PlaceSearchResult(
+ 				lat,
+ 				lng,
+ 				photoUrl,
+-				placeType);
++				placeType,
++				placeId);
+ 	}
+ 
+ 	public PlaceSearchResult withPhotoUrl(String photoUrl) {
+-		return new PlaceSearchResult(name, region, country, countryCode, displayName, lat, lng, photoUrl, placeType);
++		return new PlaceSearchResult(
++				name, region, country, countryCode, displayName, lat, lng, photoUrl, placeType, placeId);
++	}
++
++	public PlaceSearchResult withPlaceId(String placeId) {
++		return new PlaceSearchResult(
++				name, region, country, countryCode, displayName, lat, lng, photoUrl, placeType, placeId);
+ 	}
+ }
+diff --git a/src/main/java/com/duszek/pindrop/repository/TripDayPlanRepository.java b/src/main/java/com/duszek/pindrop/repository/TripDayPlanRepository.java
+new file mode 100644
+index 0000000..d7e331c
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/repository/TripDayPlanRepository.java
+@@ -0,0 +1,23 @@
++package com.duszek.pindrop.repository;
++
++import com.duszek.pindrop.entity.TripDayPlan;
++import org.springframework.data.jpa.repository.JpaRepository;
++import org.springframework.data.jpa.repository.Query;
++import org.springframework.data.repository.query.Param;
++
++import java.util.List;
++import java.util.Optional;
++
++public interface TripDayPlanRepository extends JpaRepository<TripDayPlan, Long> {
++
++	List<TripDayPlan> findByTripIdOrderByDayNumberAsc(Long tripId);
++
++	Optional<TripDayPlan> findByTripIdAndDayNumber(Long tripId, int dayNumber);
++
++	void deleteByTripId(Long tripId);
++
++	void deleteByTripIdAndDayNumber(Long tripId, int dayNumber);
++
++	@Query("select distinct p.placeId from TripDayPin p where p.block.dayPlan.trip.id = :tripId and p.placeId is not null")
++	List<String> findUsedPlaceIds(@Param("tripId") Long tripId);
++}
+diff --git a/src/main/java/com/duszek/pindrop/service/DayPlanMapper.java b/src/main/java/com/duszek/pindrop/service/DayPlanMapper.java
+new file mode 100644
+index 0000000..1db511e
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/service/DayPlanMapper.java
+@@ -0,0 +1,179 @@
++package com.duszek.pindrop.service;
++
++import com.duszek.pindrop.dto.planning.DayBlockLinkResponse;
++import com.duszek.pindrop.dto.planning.DayBlockResponse;
++import com.duszek.pindrop.dto.planning.DayPinResponse;
++import com.duszek.pindrop.dto.planning.DayPlanResponse;
++import com.duszek.pindrop.dto.planning.DayPlanStatsResponse;
++import com.duszek.pindrop.entity.Trip;
++import com.duszek.pindrop.entity.TripDayBlock;
++import com.duszek.pindrop.entity.TripDayLink;
++import com.duszek.pindrop.entity.TripDayPin;
++import com.duszek.pindrop.entity.TripDayPlan;
++import com.duszek.pindrop.provider.dayplan.GeneratedDayPlan;
++
++import java.util.List;
++
++public final class DayPlanMapper {
++
++	private DayPlanMapper() {
++	}
++
++	public static DayPlanResponse toResponse(TripDayPlan plan) {
++		List<DayBlockResponse> blocks = plan.getBlocks().stream()
++				.filter(block -> block.getParentBlock() == null)
++				.map(DayPlanMapper::toBlockResponse)
++				.toList();
++		return DayPlanResponse.builder()
++				.dayNumber(plan.getDayNumber())
++				.date(plan.getDayDate())
++				.title(plan.getTitle())
++				.narrative(plan.getNarrative())
++				.themes(plan.getThemes() != null ? plan.getThemes() : List.of())
++				.dayRole(plan.getDayRole())
++				.activityDomain(plan.getActivityDomain())
++				.stats(DayPlanStatsResponse.builder()
++						.distanceKm(plan.getDistanceKm())
++						.durationLabel(plan.getDurationLabel())
++						.elevationM(plan.getElevationM())
++						.costMin(plan.getCostMin())
++						.costMax(plan.getCostMax())
++						.currency(plan.getCurrency())
++						.build())
++				.blocks(blocks)
++				.build();
++	}
++
++	public static TripDayPlan toEntity(Trip trip, GeneratedDayPlan generated) {
++		TripDayPlan plan = new TripDayPlan();
++		plan.setTrip(trip);
++		plan.setDayNumber(generated.dayNumber());
++		plan.setDayDate(generated.date());
++		plan.setTitle(generated.title());
++		plan.setNarrative(generated.narrative());
++		plan.setThemes(generated.themes() != null ? generated.themes() : List.of());
++		plan.setDayRole(generated.dayRole());
++		plan.setActivityDomain(generated.activityDomain());
++		if (generated.stats() != null) {
++			plan.setDistanceKm(generated.stats().distanceKm());
++			plan.setDurationLabel(generated.stats().durationLabel());
++			plan.setElevationM(generated.stats().elevationM());
++			plan.setCostMin(generated.stats().costMin());
++			plan.setCostMax(generated.stats().costMax());
++			plan.setCurrency(generated.stats().currency() != null ? generated.stats().currency() : "EUR");
++		}
++		int order = 0;
++		if (generated.blocks() != null) {
++			for (GeneratedDayPlan.GeneratedDayBlock block : generated.blocks()) {
++				plan.addBlock(toBlockEntity(block, order++));
++			}
++		}
++		return plan;
++	}
++
++	private static TripDayBlock toBlockEntity(GeneratedDayPlan.GeneratedDayBlock generated, int sortOrder) {
++		TripDayBlock block = new TripDayBlock();
++		block.setKind(generated.kind());
++		block.setStartTime(generated.startTime());
++		block.setEndTime(generated.endTime());
++		block.setFlexibility(generated.flexibility());
++		block.setTitle(generated.title());
++		block.setNarrative(generated.narrative());
++		block.setLogistics(generated.logistics());
++		block.setCostLabel(generated.costLabel());
++		block.setCostMin(generated.costMin());
++		block.setCostMax(generated.costMax());
++		block.setPhotoUrl(generated.photoUrl());
++		block.setPhotoConfidence(generated.photoConfidence());
++		block.setRouteSummary(generated.routeSummary());
++		block.setSortOrder(sortOrder);
++
++		int pinOrder = 0;
++		if (generated.pins() != null) {
++			for (GeneratedDayPlan.GeneratedDayPin pin : generated.pins()) {
++				block.addPin(toPinEntity(pin, pinOrder++));
++			}
++		}
++		int linkOrder = 0;
++		if (generated.links() != null) {
++			for (GeneratedDayPlan.GeneratedDayLink link : generated.links()) {
++				block.addLink(toLinkEntity(link, linkOrder++));
++			}
++		}
++		int altOrder = 0;
++		if (generated.alternatives() != null) {
++			for (GeneratedDayPlan.GeneratedDayBlock alternative : generated.alternatives()) {
++				TripDayBlock altEntity = toBlockEntity(alternative, altOrder++);
++				block.addAlternative(altEntity);
++			}
++		}
++		return block;
++	}
++
++	private static TripDayPin toPinEntity(GeneratedDayPlan.GeneratedDayPin generated, int sortOrder) {
++		TripDayPin pin = new TripDayPin();
++		pin.setName(generated.name());
++		pin.setRole(generated.role());
++		pin.setLat(generated.lat());
++		pin.setLng(generated.lng());
++		pin.setPlaceId(generated.placeId());
++		pin.setMapsUrl(generated.mapsUrl());
++		pin.setAddress(generated.address());
++		pin.setCostLabel(generated.costLabel());
++		pin.setSortOrder(sortOrder);
++		return pin;
++	}
++
++	private static TripDayLink toLinkEntity(GeneratedDayPlan.GeneratedDayLink generated, int sortOrder) {
++		TripDayLink link = new TripDayLink();
++		link.setLinkType(generated.type());
++		link.setUrl(generated.url());
++		link.setLabel(generated.label());
++		link.setSortOrder(sortOrder);
++		return link;
++	}
++
++	private static DayBlockResponse toBlockResponse(TripDayBlock block) {
++		return DayBlockResponse.builder()
++				.id(block.getId())
++				.kind(block.getKind())
++				.startTime(block.getStartTime())
++				.endTime(block.getEndTime())
++				.flexibility(block.getFlexibility())
++				.title(block.getTitle())
++				.narrative(block.getNarrative())
++				.logistics(block.getLogistics())
++				.costLabel(block.getCostLabel())
++				.costMin(block.getCostMin())
++				.costMax(block.getCostMax())
++				.photoUrl(block.getPhotoUrl())
++				.photoConfidence(block.getPhotoConfidence())
++				.routeSummary(block.getRouteSummary())
++				.links(block.getLinks().stream().map(DayPlanMapper::toLinkResponse).toList())
++				.pins(block.getPins().stream().map(DayPlanMapper::toPinResponse).toList())
++				.alternatives(block.getAlternatives().stream().map(DayPlanMapper::toBlockResponse).toList())
++				.build();
++	}
++
++	private static DayPinResponse toPinResponse(TripDayPin pin) {
++		return DayPinResponse.builder()
++				.id(pin.getId())
++				.name(pin.getName())
++				.role(pin.getRole())
++				.lat(pin.getLat())
++				.lng(pin.getLng())
++				.placeId(pin.getPlaceId())
++				.mapsUrl(pin.getMapsUrl())
++				.address(pin.getAddress())
++				.costLabel(pin.getCostLabel())
++				.build();
++	}
++
++	private static DayBlockLinkResponse toLinkResponse(TripDayLink link) {
++		return DayBlockLinkResponse.builder()
++				.type(link.getLinkType())
++				.url(link.getUrl())
++				.label(link.getLabel())
++				.build();
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/service/DayPlanService.java b/src/main/java/com/duszek/pindrop/service/DayPlanService.java
+new file mode 100644
+index 0000000..10d5f22
+--- /dev/null
++++ b/src/main/java/com/duszek/pindrop/service/DayPlanService.java
+@@ -0,0 +1,118 @@
++package com.duszek.pindrop.service;
++
++import com.duszek.pindrop.dto.planning.DayPlanResponse;
++import com.duszek.pindrop.dto.planning.ItineraryDaySummary;
++import com.duszek.pindrop.entity.ProposalType;
++import com.duszek.pindrop.entity.Trip;
++import com.duszek.pindrop.entity.TripDayPlan;
++import com.duszek.pindrop.exception.ResourceNotFoundException;
++import com.duszek.pindrop.provider.ai.TripPlanGenerationRequest;
++import com.duszek.pindrop.provider.dayplan.ClaudeFirstDayPlanProvider;
++import com.duszek.pindrop.provider.dayplan.DayPinEnricher;
++import com.duszek.pindrop.provider.dayplan.DeepDayPlanRequest;
++import com.duszek.pindrop.provider.dayplan.GeneratedDayPlan;
++import com.duszek.pindrop.provider.weather.WeatherForecast;
++import com.duszek.pindrop.provider.weather.WeatherProvider;
++import com.duszek.pindrop.repository.TripDayPlanRepository;
++import lombok.RequiredArgsConstructor;
++import org.springframework.stereotype.Service;
++import org.springframework.transaction.annotation.Transactional;
++
++import java.util.HashSet;
++import java.util.List;
++import java.util.Set;
++
++@Service
++@RequiredArgsConstructor
++public class DayPlanService {
++
++	private final TripDayPlanRepository tripDayPlanRepository;
++	private final ClaudeFirstDayPlanProvider dayPlanAiProvider;
++	private final DayPinEnricher dayPinEnricher;
++	private final WeatherProvider weatherProvider;
++
++	@Transactional(readOnly = true)
++	public List<ItineraryDaySummary> listDays(Long tripId) {
++		return tripDayPlanRepository.findByTripIdOrderByDayNumberAsc(tripId).stream()
++				.map(plan -> new ItineraryDaySummary(
++						plan.getDayNumber(),
++						plan.getDayDate(),
++						plan.getDayRole() != null ? plan.getDayRole().name() : null,
++						plan.getActivityDomain(),
++						plan.getThemes() != null ? String.join(" · ", plan.getThemes()) : null,
++						plan.getNarrative(),
++						plan.getCostMin(),
++						plan.getCostMax(),
++						plan.getDurationLabel()))
++				.toList();
++	}
++
++	@Transactional(readOnly = true)
++	public DayPlanResponse getDay(Long tripId, int dayNumber) {
++		TripDayPlan plan = tripDayPlanRepository.findByTripIdAndDayNumber(tripId, dayNumber)
++				.orElseThrow(() -> new ResourceNotFoundException("Day plan not found"));
++		return DayPlanMapper.toResponse(plan);
++	}
++
++	@Transactional
++	public void persistDeepItinerary(Trip trip, ProposalType type) {
++		deleteAllDays(trip.getId());
++		List<GeneratedDayPlan> generated = generate(trip, type, null);
++		persist(trip, generated, Set.of());
++	}
++
++	@Transactional
++	public DayPlanResponse regenerateDay(Trip trip, int dayNumber) {
++		Set<String> used = new HashSet<>(tripDayPlanRepository.findUsedPlaceIds(trip.getId()));
++		tripDayPlanRepository.findByTripIdAndDayNumber(trip.getId(), dayNumber)
++				.ifPresent(plan -> {
++					plan.getBlocks().stream()
++							.flatMap(block -> block.getPins().stream())
++							.map(pin -> pin.getPlaceId())
++							.filter(id -> id != null && !id.isBlank())
++							.forEach(used::remove);
++					tripDayPlanRepository.delete(plan);
++				});
++		tripDayPlanRepository.flush();
++
++		List<GeneratedDayPlan> generated = generate(trip, trip.getSelectedProposalType(), dayNumber);
++		persist(trip, generated, used);
++		return getDay(trip.getId(), dayNumber);
++	}
++
++	private void deleteAllDays(Long tripId) {
++		List<TripDayPlan> existing = tripDayPlanRepository.findByTripIdOrderByDayNumberAsc(tripId);
++		tripDayPlanRepository.deleteAll(existing);
++		tripDayPlanRepository.flush();
++	}
++
++	private List<GeneratedDayPlan> generate(Trip trip, ProposalType type, Integer dayNumber) {
++		return dayPlanAiProvider.generateDayPlans(new DeepDayPlanRequest(buildContext(trip), type, dayNumber));
++	}
++
++	private void persist(Trip trip, List<GeneratedDayPlan> generated, Set<String> alreadyUsedPlaceIds) {
++		double lat = trip.getLat() != null ? trip.getLat() : 0;
++		double lng = trip.getLng() != null ? trip.getLng() : 0;
++		List<GeneratedDayPlan> enriched = dayPinEnricher.enrich(
++				generated, trip.getDestination(), lat, lng, alreadyUsedPlaceIds);
++		for (GeneratedDayPlan day : enriched) {
++			tripDayPlanRepository.save(DayPlanMapper.toEntity(trip, day));
++		}
++	}
++
++	private TripPlanGenerationRequest buildContext(Trip trip) {
++		double lat = trip.getLat() != null ? trip.getLat() : 0;
++		double lng = trip.getLng() != null ? trip.getLng() : 0;
++		List<WeatherForecast> weather = weatherProvider.getForecast(
++				lat, lng, trip.getStartDate(), trip.getEndDate());
++		return new TripPlanGenerationRequest(
++				trip.getDestination(),
++				lat,
++				lng,
++				trip.getStartDate(),
++				trip.getEndDate(),
++				trip.getPreferenceProfile(),
++				trip.getInterests() != null ? trip.getInterests() : List.of(),
++				weather);
++	}
++}
+diff --git a/src/main/java/com/duszek/pindrop/service/ItineraryGenerationService.java b/src/main/java/com/duszek/pindrop/service/ItineraryGenerationService.java
+index 4b4f778..ca4bace 100644
+--- a/src/main/java/com/duszek/pindrop/service/ItineraryGenerationService.java
++++ b/src/main/java/com/duszek/pindrop/service/ItineraryGenerationService.java
+@@ -1,5 +1,6 @@
+ package com.duszek.pindrop.service;
+ 
++import com.duszek.pindrop.dto.planning.DayPlanResponse;
+ import com.duszek.pindrop.dto.planning.ItineraryActivityResponse;
+ import com.duszek.pindrop.dto.planning.ItineraryDaySummary;
+ import com.duszek.pindrop.dto.planning.ProposalCostBreakdownMapper;
+@@ -15,7 +16,6 @@ import com.duszek.pindrop.entity.Trip;
+ import com.duszek.pindrop.entity.TripItineraryActivity;
+ import com.duszek.pindrop.entity.TripItineraryDay;
+ import com.duszek.pindrop.entity.TripProposal;
+-import com.duszek.pindrop.entity.TripStatus;
+ import com.duszek.pindrop.entity.User;
+ import com.duszek.pindrop.exception.BadRequestException;
+ import com.duszek.pindrop.exception.ForbiddenException;
+@@ -41,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+-import java.util.Optional;
+ 
+ @Slf4j
+ @Service
+@@ -52,6 +51,7 @@ public class ItineraryGenerationService {
+ 	private final TripProposalRepository tripProposalRepository;
+ 	private final TripItineraryDayRepository tripItineraryDayRepository;
+ 	private final TripItineraryActivityRepository tripItineraryActivityRepository;
++	private final DayPlanService dayPlanService;
+ 	private final NotificationRepository notificationRepository;
+ 	private final UserRepository userRepository;
+ 	private final TripPlanAiProvider tripPlanAiProvider;
+@@ -157,43 +157,10 @@ public class ItineraryGenerationService {
+ 		TripProposal proposal = tripProposalRepository.findByTripIdAndProposalType(trip.getId(), type)
+ 				.orElseThrow(() -> new BadRequestException("Selected proposal not found"));
+ 
+-		TripPlanGenerationRequest context = buildContextFromTrip(trip);
+-		TripPlanGenerationResult result = tripPlanAiProvider.generateProposals(context);
+-		TripPlanGenerationResult.GeneratedProposal selected = result.proposals().stream()
+-				.filter(p -> p.type() == type)
+-				.findFirst()
+-				.orElseThrow(() -> new BadRequestException("Proposal type not available"));
+-
+-		persistItineraryDays(trip, selected.days());
++		dayPlanService.persistDeepItinerary(trip, type);
+ 		trip.setTitle(proposal.getTitle());
+ 	}
+ 
+-	private void persistItineraryDays(Trip trip, List<TripPlanGenerationResult.GeneratedDay> days) {
+-		for (TripPlanGenerationResult.GeneratedDay day : days) {
+-			TripItineraryDay dayEntity = new TripItineraryDay();
+-			dayEntity.setTrip(trip);
+-			dayEntity.setDayNumber(day.dayNumber());
+-			dayEntity.setDayDate(day.date());
+-			tripItineraryDayRepository.save(dayEntity);
+-
+-			int order = 0;
+-			for (TripPlanGenerationResult.GeneratedActivity activity : day.activities()) {
+-				TripItineraryActivity activityEntity = new TripItineraryActivity();
+-				activityEntity.setDay(dayEntity);
+-				activityEntity.setStartTime(activity.startTime());
+-				activityEntity.setActivityType(activity.activityType());
+-				activityEntity.setTitle(activity.title());
+-				activityEntity.setDescription(activity.description());
+-				activityEntity.setPlaceName(activity.placeName());
+-				activityEntity.setLat(activity.lat());
+-				activityEntity.setLng(activity.lng());
+-				activityEntity.setWeatherJson(writeJson(activity.tempC()));
+-				activityEntity.setSortOrder(order++);
+-				tripItineraryActivityRepository.save(activityEntity);
+-			}
+-		}
+-	}
+-
+ 	private TripPlanGenerationRequest buildContextFromTrip(Trip trip) {
+ 		double lat = trip.getLat() != null ? trip.getLat() : 0;
+ 		double lng = trip.getLng() != null ? trip.getLng() : 0;
+@@ -297,28 +264,47 @@ public class ItineraryGenerationService {
+ 		Trip trip = tripRepository.findById(tripId)
+ 				.orElseThrow(() -> new ForbiddenException("Trip not found"));
+ 
+-		List<TripItineraryDay> days = tripItineraryDayRepository.findByTripIdOrderByDayNumberAsc(tripId);
+-		List<ItineraryDaySummary> daySummaries = days.stream()
+-				.map(d -> new ItineraryDaySummary(d.getDayNumber(), d.getDayDate()))
+-				.toList();
++		List<ItineraryDaySummary> daySummaries = dayPlanService.listDays(tripId);
++		if (daySummaries.isEmpty()) {
++			List<TripItineraryDay> days = tripItineraryDayRepository.findByTripIdOrderByDayNumberAsc(tripId);
++			daySummaries = days.stream()
++					.map(d -> new ItineraryDaySummary(d.getDayNumber(), d.getDayDate()))
++					.toList();
++		}
++
++		int selectedDay = dayNumber != null
++				? dayNumber
++				: (daySummaries.isEmpty() ? 1 : daySummaries.get(0).getDayNumber());
++
++		DayPlanResponse dayPlan = null;
++		try {
++			dayPlan = dayPlanService.getDay(tripId, selectedDay);
++		} catch (Exception ignored) {
++			// Legacy itinerary_activities remain the fallback when no editorial day exists.
++		}
+ 
+-		int selectedDay = dayNumber != null ? dayNumber : (days.isEmpty() ? 1 : days.get(0).getDayNumber());
+-		List<ItineraryActivityResponse> activities = days.stream()
+-				.filter(d -> d.getDayNumber() == selectedDay)
+-				.findFirst()
+-				.map(day -> tripItineraryActivityRepository.findByDayIdOrderBySortOrderAsc(day.getId()).stream()
+-						.map(this::toActivityResponse)
+-						.toList())
+-				.orElse(List.of());
++		List<ItineraryActivityResponse> activities = List.of();
++		if (dayPlan == null) {
++			activities = tripItineraryDayRepository.findByTripIdAndDayNumber(tripId, selectedDay)
++					.map(day -> tripItineraryActivityRepository.findByDayIdOrderBySortOrderAsc(day.getId()).stream()
++							.map(this::toActivityResponse)
++							.toList())
++					.orElse(List.of());
++		}
+ 
+ 		return TripItineraryResponse.builder()
+ 				.tripId(trip.getId())
+ 				.title(trip.getTitle())
+ 				.destination(trip.getDestination())
+ 				.selectedProposalType(trip.getSelectedProposalType())
+-				.totalDays(days.size())
++				.totalDays(daySummaries.size())
+ 				.days(daySummaries)
+ 				.activities(activities)
++				.selectedDayRole(dayPlan != null && dayPlan.getDayRole() != null ? dayPlan.getDayRole().name() : null)
++				.selectedActivityDomain(dayPlan != null ? dayPlan.getActivityDomain() : null)
++				.dayPlan(dayPlan)
++				.lat(trip.getLat())
++				.lng(trip.getLng())
+ 				.build();
+ 	}
+ 
+diff --git a/src/main/java/com/duszek/pindrop/service/PlaceLocalizationService.java b/src/main/java/com/duszek/pindrop/service/PlaceLocalizationService.java
+index b46cea9..e09eb9b 100644
+--- a/src/main/java/com/duszek/pindrop/service/PlaceLocalizationService.java
++++ b/src/main/java/com/duszek/pindrop/service/PlaceLocalizationService.java
+@@ -29,7 +29,8 @@ public class PlaceLocalizationService {
+ 				place.lat(),
+ 				place.lng(),
+ 				place.photoUrl(),
+-				place.placeType());
++				place.placeType(),
++				place.placeId());
+ 	}
+ 
+ 	public PlaceSearchResult localize(PlaceSearchResult place, String language) {
+@@ -53,7 +54,8 @@ public class PlaceLocalizationService {
+ 				localized.lat(),
+ 				localized.lng(),
+ 				place.photoUrl(),
+-				localized.placeType());
++				localized.placeType(),
++				localized.placeId() != null ? localized.placeId() : place.placeId());
+ 	}
+ 
+ 	private static String localizeCountry(String countryCode, String fallbackCountry, Locale displayLocale) {
+diff --git a/src/main/java/com/duszek/pindrop/service/PopularDestinationsService.java b/src/main/java/com/duszek/pindrop/service/PopularDestinationsService.java
+index f6ec351..9c4f19e 100644
+--- a/src/main/java/com/duszek/pindrop/service/PopularDestinationsService.java
++++ b/src/main/java/com/duszek/pindrop/service/PopularDestinationsService.java
+@@ -124,7 +124,8 @@ public class PopularDestinationsService {
+ 				source.lat(),
+ 				source.lng(),
+ 				source.photoUrl(),
+-				suggestion.placeType() != null ? suggestion.placeType() : source.placeType());
++				suggestion.placeType() != null ? suggestion.placeType() : source.placeType(),
++				source.placeId());
+ 	}
+ 
+ 	private static boolean countryMatches(String placeCountry, String targetCountry) {
+diff --git a/src/main/java/com/duszek/pindrop/service/TripPlanningService.java b/src/main/java/com/duszek/pindrop/service/TripPlanningService.java
+index 9bec158..17ddc13 100644
+--- a/src/main/java/com/duszek/pindrop/service/TripPlanningService.java
++++ b/src/main/java/com/duszek/pindrop/service/TripPlanningService.java
+@@ -1,6 +1,8 @@
+ package com.duszek.pindrop.service;
+ 
++import com.duszek.pindrop.dto.planning.DayPlanResponse;
+ import com.duszek.pindrop.dto.planning.InterestSuggestionResponse;
++import com.duszek.pindrop.dto.planning.ItineraryDaySummary;
+ import com.duszek.pindrop.dto.planning.PreferenceProfile;
+ import com.duszek.pindrop.dto.planning.SelectProposalRequest;
+ import com.duszek.pindrop.dto.planning.TripItineraryResponse;
+@@ -31,6 +33,7 @@ public class TripPlanningService {
+ 	private final TripRepository tripRepository;
+ 	private final TripItineraryActivityRepository tripItineraryActivityRepository;
+ 	private final ItineraryGenerationService itineraryGenerationService;
++	private final DayPlanService dayPlanService;
+ 	private final InterestSuggestionService interestSuggestionService;
+ 
+ 	@Transactional
+@@ -114,6 +117,24 @@ public class TripPlanningService {
+ 		itineraryGenerationService.persistSelectedProposalItinerary(trip, request.getType());
+ 	}
+ 
++	@Transactional(readOnly = true)
++	public List<ItineraryDaySummary> listDays(Long userId, Long tripId) {
++		itineraryGenerationService.loadOwnedTrip(userId, tripId);
++		return dayPlanService.listDays(tripId);
++	}
++
++	@Transactional(readOnly = true)
++	public DayPlanResponse getDayPlan(Long userId, Long tripId, int dayNumber) {
++		itineraryGenerationService.loadOwnedTrip(userId, tripId);
++		return dayPlanService.getDay(tripId, dayNumber);
++	}
++
++	@Transactional
++	public DayPlanResponse regenerateDay(Long userId, Long tripId, int dayNumber) {
++		Trip trip = itineraryGenerationService.loadOwnedTrip(userId, tripId);
++		return dayPlanService.regenerateDay(trip, dayNumber);
++	}
++
+ 	@Transactional(readOnly = true)
+ 	public TripItineraryResponse getItinerary(Long userId, Long tripId, Integer day) {
+ 		itineraryGenerationService.loadOwnedTrip(userId, tripId);
+diff --git a/src/main/resources/application.yml b/src/main/resources/application.yml
+index b1c0f5d..be46e88 100644
+--- a/src/main/resources/application.yml
++++ b/src/main/resources/application.yml
+@@ -47,6 +47,8 @@ app:
+     provider: stub
+     model: gpt-4o
+     api-key: ${OPENAI_API_KEY:}
++    anthropic-api-key: ${ANTHROPIC_API_KEY:}
++    anthropic-model: ${ANTHROPIC_MODEL:claude-sonnet-4-20250514}
+     base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+   places:
+     provider: stub
+diff --git a/src/main/resources/db/migration/V9__editorial_day_plan.sql b/src/main/resources/db/migration/V9__editorial_day_plan.sql
+new file mode 100644
+index 0000000..e6b0212
+--- /dev/null
++++ b/src/main/resources/db/migration/V9__editorial_day_plan.sql
+@@ -0,0 +1,70 @@
++CREATE TABLE trip_day_plans (
++    id BIGSERIAL PRIMARY KEY,
++    trip_id BIGINT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
++    day_number INT NOT NULL,
++    day_date DATE NOT NULL,
++    title VARCHAR(255),
++    narrative TEXT,
++    themes TEXT[],
++    day_role VARCHAR(50),
++    activity_domain VARCHAR(80),
++    distance_km DOUBLE PRECISION,
++    duration_label VARCHAR(80),
++    elevation_m INT,
++    cost_min INT,
++    cost_max INT,
++    currency VARCHAR(8) NOT NULL DEFAULT 'EUR',
++    CONSTRAINT uq_trip_day_plan UNIQUE (trip_id, day_number)
++);
++
++CREATE INDEX idx_trip_day_plans_trip ON trip_day_plans(trip_id);
++
++CREATE TABLE trip_day_blocks (
++    id BIGSERIAL PRIMARY KEY,
++    day_plan_id BIGINT NOT NULL REFERENCES trip_day_plans(id) ON DELETE CASCADE,
++    parent_block_id BIGINT REFERENCES trip_day_blocks(id) ON DELETE CASCADE,
++    kind VARCHAR(40) NOT NULL,
++    start_time TIME NOT NULL,
++    end_time TIME,
++    flexibility VARCHAR(20),
++    title VARCHAR(255) NOT NULL,
++    narrative TEXT,
++    logistics TEXT,
++    cost_label VARCHAR(160),
++    cost_min INT,
++    cost_max INT,
++    photo_url TEXT,
++    photo_confidence VARCHAR(20),
++    route_summary TEXT,
++    sort_order INT NOT NULL DEFAULT 0
++);
++
++CREATE INDEX idx_trip_day_blocks_plan ON trip_day_blocks(day_plan_id, sort_order);
++
++CREATE TABLE trip_day_pins (
++    id BIGSERIAL PRIMARY KEY,
++    block_id BIGINT NOT NULL REFERENCES trip_day_blocks(id) ON DELETE CASCADE,
++    name VARCHAR(255) NOT NULL,
++    role VARCHAR(40) NOT NULL,
++    lat DOUBLE PRECISION,
++    lng DOUBLE PRECISION,
++    place_id VARCHAR(255),
++    maps_url TEXT,
++    address TEXT,
++    cost_label VARCHAR(160),
++    sort_order INT NOT NULL DEFAULT 0
++);
++
++CREATE INDEX idx_trip_day_pins_block ON trip_day_pins(block_id, sort_order);
++CREATE INDEX idx_trip_day_pins_place ON trip_day_pins(place_id);
++
++CREATE TABLE trip_day_links (
++    id BIGSERIAL PRIMARY KEY,
++    block_id BIGINT NOT NULL REFERENCES trip_day_blocks(id) ON DELETE CASCADE,
++    link_type VARCHAR(40) NOT NULL,
++    url TEXT NOT NULL,
++    label VARCHAR(255),
++    sort_order INT NOT NULL DEFAULT 0
++);
++
++CREATE INDEX idx_trip_day_links_block ON trip_day_links(block_id, sort_order);
+diff --git a/src/test/java/com/duszek/pindrop/provider/dayplan/DayPinEnricherTest.java b/src/test/java/com/duszek/pindrop/provider/dayplan/DayPinEnricherTest.java
+new file mode 100644
+index 0000000..8ed00d9
+--- /dev/null
++++ b/src/test/java/com/duszek/pindrop/provider/dayplan/DayPinEnricherTest.java
+@@ -0,0 +1,85 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.DayPinRole;
++import com.duszek.pindrop.entity.DayRole;
++import com.duszek.pindrop.provider.places.GooglePlacesClient;
++import com.duszek.pindrop.provider.places.PlaceSearchResult;
++import org.junit.jupiter.api.Test;
++
++import java.time.LocalDate;
++import java.time.LocalTime;
++import java.util.List;
++import java.util.Set;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNotEquals;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++class DayPinEnricherTest {
++
++	@Test
++	void assignsUniqueMapsUrlsAndSkipsDestinationPins() {
++		GooglePlacesClient client = mock(GooglePlacesClient.class);
++		when(client.isConfigured()).thenReturn(false);
++		DayPinEnricher enricher = new DayPinEnricher(client);
++
++		GeneratedDayPlan day = new GeneratedDayPlan(
++				1,
++				LocalDate.parse("2026-08-04"),
++				"Walk",
++				"Named streets, not the city pin.",
++				List.of("Old town"),
++				DayRole.EXPLORE,
++				"CITY_WALKING",
++				new GeneratedDayPlan.Stats(7.0, "6 h", null, 40, 70, "EUR"),
++				List.of(new GeneratedDayPlan.GeneratedDayBlock(
++						DayBlockKind.CITY_WALK, LocalTime.of(9, 30), LocalTime.of(13, 0), null,
++						"Old town loop", "Walk the named squares.", null, null, null, null, null, null,
++						"Harbor square → Arcade street",
++						List.of(),
++						List.of(
++								new GeneratedDayPlan.GeneratedDayPin("Harbor square", DayPinRole.STOP, 38.708, -9.136, null, null, null, null),
++								new GeneratedDayPlan.GeneratedDayPin("Arcade street", DayPinRole.STOP, 38.711, -9.139, null, null, null, null),
++								new GeneratedDayPlan.GeneratedDayPin("Lisbon", DayPinRole.STOP, 38.722, -9.139, null, null, null, null)),
++						List.of())));
++
++		List<GeneratedDayPlan> enriched = enricher.enrich(List.of(day), "Lisbon, Portugal", 38.722, -9.139, Set.of());
++		List<GeneratedDayPlan.GeneratedDayPin> pins = enriched.get(0).blocks().get(0).pins();
++		assertEquals(2, pins.size());
++		assertNotEquals(pins.get(0).mapsUrl(), pins.get(1).mapsUrl());
++		assertTrue(pins.stream().noneMatch(pin -> "Lisbon".equalsIgnoreCase(pin.name())));
++	}
++
++	@Test
++	void usesPlaceIdWhenPlacesMatchIsStrong() {
++		GooglePlacesClient client = mock(GooglePlacesClient.class);
++		when(client.isConfigured()).thenReturn(true);
++		when(client.search("A Baiuca, Lisbon, Portugal", 3, 38.722, -9.139)).thenReturn(List.of(
++				PlaceSearchResult.of("A Baiuca", "Lisbon", "Portugal", "pt", 38.711, -9.144, null, null, "ChIJbaiuca")));
++		DayPinEnricher enricher = new DayPinEnricher(client);
++
++		GeneratedDayPlan day = new GeneratedDayPlan(
++				1,
++				LocalDate.parse("2026-08-04"),
++				"Lunch",
++				"Cash-only tasca.",
++				List.of("Food"),
++				DayRole.EXPLORE,
++				"FOOD_DINING",
++				new GeneratedDayPlan.Stats(1.0, "2 h", null, 15, 25, "EUR"),
++				List.of(new GeneratedDayPlan.GeneratedDayBlock(
++						DayBlockKind.FOOD, LocalTime.of(13, 0), LocalTime.of(14, 30), null,
++						"A Baiuca", "Small dining room.", "Cash only.", "€15–25", 15, 25, null, null, null,
++						List.of(),
++						List.of(new GeneratedDayPlan.GeneratedDayPin("A Baiuca", DayPinRole.RESTAURANT, null, null, null, null, null, null)),
++						List.of())));
++
++		List<GeneratedDayPlan.GeneratedDayPin> pins = enricher.enrich(
++				List.of(day), "Lisbon, Portugal", 38.722, -9.139, Set.of()).get(0).blocks().get(0).pins();
++		assertEquals("ChIJbaiuca", pins.get(0).placeId());
++		assertTrue(pins.get(0).mapsUrl().contains("query_place_id=ChIJbaiuca"));
++	}
++}
+diff --git a/src/test/java/com/duszek/pindrop/provider/dayplan/DayPlanConcretenessValidatorTest.java b/src/test/java/com/duszek/pindrop/provider/dayplan/DayPlanConcretenessValidatorTest.java
+new file mode 100644
+index 0000000..cff39ab
+--- /dev/null
++++ b/src/test/java/com/duszek/pindrop/provider/dayplan/DayPlanConcretenessValidatorTest.java
+@@ -0,0 +1,87 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.DayPinRole;
++import com.duszek.pindrop.entity.DayRole;
++import org.junit.jupiter.api.Test;
++
++import java.time.LocalDate;
++import java.time.LocalTime;
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++class DayPlanConcretenessValidatorTest {
++
++	@Test
++	void rejectsDestinationNamedPinsAndMissingNarrative() {
++		GeneratedDayPlan plan = new GeneratedDayPlan(
++				1,
++				LocalDate.parse("2026-08-04"),
++				"Lake day",
++				null,
++				List.of("Lake"),
++				DayRole.EXPLORE,
++				"CITY_WALKING",
++				new GeneratedDayPlan.Stats(7.0, "6 h", null, 40, 60, "EUR"),
++				List.of(block("Meal in Lake Geneva", DayBlockKind.FOOD, List.of(
++						pin("Lake Geneva", DayPinRole.STOP, 46.2, 6.1)))));
++
++		List<String> errors = DayPlanConcretenessValidator.validate(plan, "Lake Geneva, Switzerland");
++		assertTrue(errors.stream().anyMatch(error -> error.toLowerCase().contains("narrative")));
++		assertTrue(errors.stream().anyMatch(error -> error.toLowerCase().contains("destination")));
++	}
++
++	@Test
++	void rejectsSharedCoordinates() {
++		GeneratedDayPlan plan = validPlan(List.of(
++				pin("Harbor square", DayPinRole.STOP, 46.2, 6.1),
++				pin("Arcade street", DayPinRole.STOP, 46.2, 6.1)));
++
++		List<String> errors = DayPlanConcretenessValidator.validate(plan, "Lake Geneva, Switzerland");
++		assertTrue(errors.stream().anyMatch(error -> error.toLowerCase().contains("same coordinates")));
++	}
++
++	@Test
++	void acceptsUniqueConcretePins() {
++		GeneratedDayPlan plan = validPlan(List.of(
++				pin("Wodogrzmoty Mickiewicza", DayPinRole.TRAILHEAD, 49.213, 20.071),
++				pin("Czarny Staw", DayPinRole.VIEWPOINT, 49.188, 20.076),
++				pin("Schronisko przy Morskim Oku", DayPinRole.HUT, 49.201, 20.071)));
++
++		assertTrue(DayPlanConcretenessValidator.validate(plan, "Zakopane, Poland").isEmpty());
++	}
++
++	@Test
++	void looksGenericCatchesHydratorTitles() {
++		assertTrue(DayPlanConcretenessValidator.looksGeneric("Meal in Lake Geneva", "Lake Geneva, Switzerland"));
++		assertTrue(DayPlanConcretenessValidator.looksGeneric("Check in and orient", "Lisbon, Portugal"));
++		assertFalse(DayPlanConcretenessValidator.looksGeneric("A Baiuca", "Lisbon, Portugal"));
++	}
++
++	private static GeneratedDayPlan validPlan(List<GeneratedDayPlan.GeneratedDayPin> pins) {
++		return new GeneratedDayPlan(
++				1,
++				LocalDate.parse("2026-08-04"),
++				"Ridge day",
++				"Start before 8:00 from a named trailhead.",
++				List.of("Ridge", "Hut lunch"),
++				DayRole.EXCURSION,
++				"MOUNTAIN_TRAIL",
++				new GeneratedDayPlan.Stats(14.0, "8 h", 1100, 25, 40, "EUR"),
++				List.of(block("Ridge traverse", DayBlockKind.TREK, pins)));
++	}
++
++	private static GeneratedDayPlan.GeneratedDayBlock block(
++			String title, DayBlockKind kind, List<GeneratedDayPlan.GeneratedDayPin> pins) {
++		return new GeneratedDayPlan.GeneratedDayBlock(
++				kind, LocalTime.of(8, 30), LocalTime.of(17, 0), null, title,
++				"Main chapter of the day.", null, null, null, null, null, null, null,
++				List.of(), pins, List.of());
++	}
++
++	private static GeneratedDayPlan.GeneratedDayPin pin(String name, DayPinRole role, double lat, double lng) {
++		return new GeneratedDayPlan.GeneratedDayPin(name, role, lat, lng, null, null, null, null);
++	}
++}
+diff --git a/src/test/java/com/duszek/pindrop/provider/dayplan/DayPlanJsonParserTest.java b/src/test/java/com/duszek/pindrop/provider/dayplan/DayPlanJsonParserTest.java
+new file mode 100644
+index 0000000..1d51dc9
+--- /dev/null
++++ b/src/test/java/com/duszek/pindrop/provider/dayplan/DayPlanJsonParserTest.java
+@@ -0,0 +1,27 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import org.junit.jupiter.api.Test;
++import tools.jackson.databind.json.JsonMapper;
++
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++
++class DayPlanJsonParserTest {
++
++	@Test
++	void parsesEditorialDayJson() {
++		String json = """
++				{"days":[{"dayNumber":3,"date":"2026-08-06","title":"Rysy","narrative":"Wejście od Palenicy.","themes":["Rysy","Hut lunch"],"stats":{"distanceKm":14,"durationLabel":"8-9 h","elevationM":1100,"costMin":25,"costMax":40,"currency":"EUR"},"blocks":[{"kind":"TREK","startTime":"08:30","endTime":"17:00","title":"Szlak na Rysy","narrative":"Główna część.","pins":[{"name":"Wodogrzmoty Mickiewicza","role":"TRAILHEAD","lat":49.213,"lng":20.071},{"name":"Czarny Staw","role":"VIEWPOINT","lat":49.188,"lng":20.076}],"links":[{"type":"YOUTUBE","url":"https://youtu.be/x","label":"Film"}],"alternatives":[]}]}]}
++				""";
++		List<GeneratedDayPlan> days = DayPlanJsonParser.parseDays(new JsonMapper(), json);
++		assertEquals(1, days.size());
++		assertEquals(3, days.get(0).dayNumber());
++		assertEquals(DayBlockKind.TREK, days.get(0).blocks().get(0).kind());
++		assertEquals(2, days.get(0).blocks().get(0).pins().size());
++		assertFalse(PinMapsUrlBuilder.isDestinationOnlyName(
++				days.get(0).blocks().get(0).pins().get(0).name(), "Zakopane, Poland"));
++	}
++}
+diff --git a/src/test/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanStubTest.java b/src/test/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanStubTest.java
+new file mode 100644
+index 0000000..4249132
+--- /dev/null
++++ b/src/test/java/com/duszek/pindrop/provider/dayplan/EditorialDayPlanStubTest.java
+@@ -0,0 +1,64 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayBlockKind;
++import com.duszek.pindrop.entity.DayPinRole;
++import com.duszek.pindrop.entity.ProposalType;
++import com.duszek.pindrop.provider.ai.TripPlanGenerationRequest;
++import org.junit.jupiter.api.Test;
++
++import java.time.LocalDate;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Set;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++class EditorialDayPlanStubTest {
++
++	private final EditorialDayPlanStub stub = new EditorialDayPlanStub();
++
++	@Test
++	void trekDayHasParkingTrailAndHutWithUniqueCoordinates() {
++		GeneratedDayPlan day = stub.generate(request(List.of("HIKING", "MOUNTAINS"), 3)).get(1);
++		assertTrue(day.blocks().stream().anyMatch(block -> block.kind() == DayBlockKind.TREK));
++		List<GeneratedDayPlan.GeneratedDayPin> pins = day.blocks().stream()
++				.filter(block -> block.kind() == DayBlockKind.TREK)
++				.flatMap(block -> block.pins().stream())
++				.toList();
++		Set<DayPinRole> roles = new HashSet<>();
++		pins.forEach(pin -> roles.add(pin.role()));
++		assertTrue(roles.contains(DayPinRole.PARKING) || roles.contains(DayPinRole.TRAILHEAD));
++		assertTrue(roles.contains(DayPinRole.HUT) || roles.contains(DayPinRole.VIEWPOINT));
++		assertFalse(pins.stream().anyMatch(pin -> PinMapsUrlBuilder.isDestinationOnlyName(pin.name(), "Zakopane, Poland")));
++		assertTrue(DayPlanConcretenessValidator.validate(day, "Zakopane, Poland").isEmpty());
++		long uniqueCoords = pins.stream().map(pin -> pin.lat() + "," + pin.lng()).distinct().count();
++		assertEquals(pins.size(), uniqueCoords);
++	}
++
++	@Test
++	void neverEmitsMealInCity() {
++		for (GeneratedDayPlan day : stub.generate(request(List.of("FOOD", "CULTURE"), 2))) {
++			day.blocks().forEach(block -> {
++				assertFalse(DayPlanConcretenessValidator.looksGeneric(block.title(), "Lisbon, Portugal"));
++				assertFalse(block.title().toLowerCase().startsWith("meal in"));
++			});
++		}
++	}
++
++	private static DeepDayPlanRequest request(List<String> interests, int days) {
++		return new DeepDayPlanRequest(
++				new TripPlanGenerationRequest(
++						"Zakopane, Poland",
++						49.299,
++						19.949,
++						LocalDate.parse("2026-08-04"),
++						LocalDate.parse("2026-08-04").plusDays(days - 1L),
++						null,
++						interests,
++						List.of()),
++				ProposalType.INTENSE,
++				null);
++	}
++}
+diff --git a/src/test/java/com/duszek/pindrop/provider/dayplan/PinMapsUrlBuilderTest.java b/src/test/java/com/duszek/pindrop/provider/dayplan/PinMapsUrlBuilderTest.java
+new file mode 100644
+index 0000000..0978e03
+--- /dev/null
++++ b/src/test/java/com/duszek/pindrop/provider/dayplan/PinMapsUrlBuilderTest.java
+@@ -0,0 +1,42 @@
++package com.duszek.pindrop.provider.dayplan;
++
++import com.duszek.pindrop.entity.DayPinRole;
++import org.junit.jupiter.api.Test;
++
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++class PinMapsUrlBuilderTest {
++
++	@Test
++	void prefersPlaceId() {
++		String url = PinMapsUrlBuilder.build(
++				new GeneratedDayPlan.GeneratedDayPin("Lake Geneva", DayPinRole.STOP, 46.2, 6.1, "ChIJswiss", null, null, null),
++				"Lake Geneva, Vaud, Switzerland");
++		assertTrue(url.contains("query_place_id=ChIJswiss"));
++		assertFalse(url.contains("Lake+Geneva%2C+Lake+Geneva"));
++	}
++
++	@Test
++	void usesCoordinatesWhenPresent() {
++		String url = PinMapsUrlBuilder.build(
++				new GeneratedDayPlan.GeneratedDayPin("Lake Geneva", DayPinRole.STOP, 46.4414, 6.5295, null, null, null, null),
++				"Lake Geneva, Vaud, Switzerland");
++		assertTrue(url.contains("46.4414,6.5295"));
++	}
++
++	@Test
++	void neverBuildsDestinationCommaDestination() {
++		String url = PinMapsUrlBuilder.build(
++				new GeneratedDayPlan.GeneratedDayPin("Lake Geneva", DayPinRole.STOP, null, null, null, null, "Lake Geneva", null),
++				"Lake Geneva, Vaud, Switzerland");
++		assertTrue(url.contains("Switzerland"));
++		assertFalse(url.contains("Lake+Geneva%2C+Lake+Geneva"));
++	}
++
++	@Test
++	void detectsDestinationOnlyNames() {
++		assertTrue(PinMapsUrlBuilder.isDestinationOnlyName("Lake Geneva", "Lake Geneva, Vaud, Switzerland"));
++		assertFalse(PinMapsUrlBuilder.isDestinationOnlyName("Palenica Białczańska", "Zakopane, Poland"));
++	}
++}
+diff --git a/src/test/java/com/duszek/pindrop/provider/places/GooglePlacesClientTest.java b/src/test/java/com/duszek/pindrop/provider/places/GooglePlacesClientTest.java
+index 92f928e..f6f955b 100644
+--- a/src/test/java/com/duszek/pindrop/provider/places/GooglePlacesClientTest.java
++++ b/src/test/java/com/duszek/pindrop/provider/places/GooglePlacesClientTest.java
+@@ -39,4 +39,11 @@ class GooglePlacesClientTest {
+ 				"https://lh3.googleusercontent.com/photo.jpg",
+ 				GooglePlacesClient.normalizePhotoUri("https://lh3.googleusercontent.com/photo.jpg"));
+ 	}
++
++	@Test
++	void extractPlaceId_stripsPlacesPrefix() {
++		assertEquals("ChIJabc", GooglePlacesClient.extractPlaceId("places/ChIJabc"));
++		assertEquals("ChIJabc", GooglePlacesClient.extractPlaceId("ChIJabc"));
++		assertNull(GooglePlacesClient.extractPlaceId(null));
++	}
+ }
+-- 
+2.43.0
+

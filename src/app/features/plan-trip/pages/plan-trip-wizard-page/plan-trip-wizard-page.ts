@@ -700,7 +700,6 @@ export class PlanTripWizardPage implements OnInit {
 
 
   protected selectPlace(place: PlaceResult): void {
-
     this.touched.update((state) => ({ ...state, destination: true }));
 
     this.destinationForm.update((f) => ({
