@@ -9,7 +9,8 @@ import type { DayBlock, DayBlockKind, DayPin, ExternalLinkType } from '../../../
 import { DashboardStore } from '../../../dashboard/services/dashboard.store';
 import { DayMinimapComponent } from '../../components/day-minimap/day-minimap';
 import { PlanTripStore } from '../../services/plan-trip.store';
-import { pinRoleLabel, playbookLabel, toDayPlan } from '../../utils/day-plan.mapper';
+import { pinRoleLabelKey, playbookLabelKey, toDayPlan } from '../../utils/day-plan.mapper';
+import { DAY_PLAYBOOKS } from '../../data/day-playbooks';
 
 @Component({
   selector: 'app-trip-itinerary-page',
@@ -67,12 +68,20 @@ export class TripItineraryPage implements OnInit {
     return start;
   }
 
-  protected kindLabel(kind: DayBlockKind): string {
-    return playbookLabel(kind);
+  protected kindLabelKey(kind: DayBlockKind): string {
+    return playbookLabelKey(kind);
   }
 
-  protected roleLabel(role: DayPin['role']): string {
-    return pinRoleLabel(role);
+  protected roleLabelKey(role: DayPin['role']): string {
+    return pinRoleLabelKey(role);
+  }
+
+  protected playbookKinds(): DayBlockKind[] {
+    return [...new Set((this.dayPlan()?.blocks ?? []).map((block) => block.kind))];
+  }
+
+  protected expectedPins(kind: DayBlockKind): string[] {
+    return DAY_PLAYBOOKS[kind]?.expectedPins ?? [];
   }
 
   protected shouldShowPhoto(block: DayBlock): boolean {
@@ -140,7 +149,13 @@ export class TripItineraryPage implements OnInit {
       )
       .subscribe({
         next: () => this.loadDay(tripId, day),
-        error: () => this.store.error.set('Failed to regenerate day.'),
+        error: (err: { status?: number; error?: { message?: string } }) => {
+          this.store.error.set(
+            err?.status === 422
+              ? (err.error?.message ?? 'Could not generate a specific day. Please regenerate.')
+              : 'Failed to regenerate day.',
+          );
+        },
       });
   }
 

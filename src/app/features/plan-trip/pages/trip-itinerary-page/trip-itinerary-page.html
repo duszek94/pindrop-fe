@@ -29,6 +29,13 @@
         @if (plan.themes.length) {
           <p class="trip-itinerary__day-theme">{{ plan.themes.join(' · ') }}</p>
         }
+        @if (playbookKinds().length) {
+          <div class="trip-itinerary__taxonomy">
+            @for (kind of playbookKinds(); track kind) {
+              <span class="trip-itinerary__badge" [attr.data-kind]="kind">{{ kindLabelKey(kind) | translate }}</span>
+            }
+          </div>
+        }
         @if (plan.narrative) {
           <p class="trip-itinerary__day-summary">{{ plan.narrative }}</p>
         }
@@ -47,9 +54,14 @@
             <span class="trip-itinerary__time">{{ formatBlockTime(block) }}</span>
             <div class="trip-itinerary__body">
               <p class="trip-itinerary__meta">
-                <span class="trip-itinerary__time-type">{{ formatBlockTime(block) }} · {{ kindLabel(block.kind) }}</span>
+                <span class="trip-itinerary__time-type">{{ formatBlockTime(block) }} · {{ kindLabelKey(block.kind) | translate }}</span>
               </p>
               <h3 class="trip-itinerary__title">{{ block.title }}</h3>
+              @if (expectedPins(block.kind).length) {
+                <p class="trip-itinerary__playbook-hint">
+                  {{ expectedPins(block.kind).join(' · ') }}
+                </p>
+              }
               @if (block.routeSummary) {
                 <p class="trip-itinerary__visit-meta">{{ block.routeSummary }}</p>
               }
@@ -83,7 +95,7 @@
                 <ul class="trip-itinerary__pins">
                   @for (pin of block.pins; track pin.name + (pin.mapsUrl ?? '')) {
                     <li>
-                      <span class="trip-itinerary__pin-role">{{ roleLabel(pin.role) }}</span>
+                      <span class="trip-itinerary__pin-role">{{ roleLabelKey(pin.role) | translate }}</span>
                       <span class="trip-itinerary__pin-name">{{ pin.name }}</span>
                       @if (pin.address) {
                         <span class="trip-itinerary__pin-address">{{ pin.address }}</span>

@@ -395,6 +395,32 @@
       "backupHint": "Shorter route / rainy backup",
       "regenerateDay": "Regenerate day",
       "saveTrip": "Save Trip",
+      "playbooks": {
+        "TREK": "Trek",
+        "CITY_WALK": "City walk",
+        "MUSEUM": "Museum",
+        "BEACH": "Beach",
+        "CAMP": "Camp",
+        "FOOD": "Food",
+        "TRANSIT": "Transit",
+        "EVENING": "Evening",
+        "REST": "Rest",
+        "ARRIVAL": "Arrival"
+      },
+      "pinRoles": {
+        "PARKING": "Parking",
+        "TRAILHEAD": "Trailhead",
+        "VIEWPOINT": "Viewpoint",
+        "HUT": "Hut",
+        "RESTAURANT": "Restaurant",
+        "SHOP": "Shop",
+        "BEACH": "Beach",
+        "MUSEUM": "Museum",
+        "CAMP": "Camp",
+        "LODGING": "Lodging",
+        "STOP": "Stop",
+        "OTHER": "Pin"
+      },
       "links": {
         "allTrails": "View on AllTrails",
         "wikiloc": "View on Wikiloc",

@@ -322,13 +322,48 @@
   margin-top: 0.5rem;
 }
 
-.trip-itinerary__badge {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  background: rgb(16 185 129 / 15%);
-  color: var(--pindrop-primary);
+.trip-itinerary__playbook-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pindrop-text-muted);
+}
+
+.trip-itinerary__badge[data-kind='TREK'] {
+  background: rgb(16 185 129 / 18%);
+  color: #34d399;
+}
+
+.trip-itinerary__badge[data-kind='CITY_WALK'] {
+  background: rgb(99 102 241 / 18%);
+  color: #a5b4fc;
+}
+
+.trip-itinerary__badge[data-kind='FOOD'] {
+  background: rgb(245 158 11 / 18%);
+  color: #fbbf24;
+}
+
+.trip-itinerary__badge[data-kind='EVENING'] {
+  background: rgb(139 92 246 / 18%);
+  color: #c4b5fd;
+}
+
+.trip-itinerary__badge[data-kind='BEACH'] {
+  background: rgb(20 184 166 / 18%);
+  color: #5eead4;
+}
+
+.trip-itinerary__badge[data-kind='CAMP'] {
+  background: rgb(148 163 184 / 18%);
+  color: #cbd5e1;
+}
+
+.trip-itinerary__badge[data-kind='MUSEUM'] {
+  background: rgb(59 130 246 / 18%);
+  color: #93c5fd;
+}
 
   &--domain {
     background: rgb(59 130 246 / 12%);

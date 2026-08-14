@@ -352,6 +352,32 @@
       "backupHint": "Skrót / plan na deszcz",
       "regenerateDay": "Wygeneruj dzień ponownie",
       "saveTrip": "Zapisz wyjazd",
+      "playbooks": {
+        "TREK": "Trekking",
+        "CITY_WALK": "Spacer",
+        "MUSEUM": "Muzeum",
+        "BEACH": "Plaża",
+        "CAMP": "Biwak",
+        "FOOD": "Jedzenie",
+        "TRANSIT": "Dojazd",
+        "EVENING": "Wieczór",
+        "REST": "Odpoczynek",
+        "ARRIVAL": "Przyjazd"
+      },
+      "pinRoles": {
+        "PARKING": "Parking",
+        "TRAILHEAD": "Początek szlaku",
+        "VIEWPOINT": "Punkt widokowy",
+        "HUT": "Schronisko",
+        "RESTAURANT": "Restauracja",
+        "SHOP": "Sklep",
+        "BEACH": "Plaża",
+        "MUSEUM": "Muzeum",
+        "CAMP": "Obóz",
+        "LODGING": "Nocleg",
+        "STOP": "Przystanek",
+        "OTHER": "Pinezka"
+      },
       "links": {
         "allTrails": "Zobacz w AllTrails",
         "wikiloc": "Zobacz w Wikiloc",

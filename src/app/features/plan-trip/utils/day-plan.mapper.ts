@@ -11,6 +11,7 @@ import type {
   TripItinerary,
 } from '../../../core/models/plan-trip.models';
 import { isDestinationOnlyName, withResolvedMapsUrl } from './maps-url';
+import { uniquifyPins } from './pin-enricher';
 
 const TREK_HINTS = ['trek', 'trail', 'hike', 'summit', 'mountain', 'via ferrata', 'ridge'];
 const WALK_HINTS = ['walk', 'stroll', 'baixa', 'old town', 'neighborhood', 'promenade'];
@@ -197,13 +198,16 @@ function pinsFromActivity(
     );
   }
 
-  return pins.filter((pin, index, list) => {
-    const key = `${pin.name.toLowerCase()}|${pin.lat ?? ''}|${pin.lng ?? ''}|${pin.placeId ?? ''}`;
-    return list.findIndex((candidate) => {
-      const candidateKey = `${candidate.name.toLowerCase()}|${candidate.lat ?? ''}|${candidate.lng ?? ''}|${candidate.placeId ?? ''}`;
-      return candidateKey === key;
-    }) === index;
-  });
+  return uniquifyPins(
+    pins.filter((pin, index, list) => {
+      const key = `${pin.name.toLowerCase()}|${pin.lat ?? ''}|${pin.lng ?? ''}|${pin.placeId ?? ''}`;
+      return list.findIndex((candidate) => {
+        const candidateKey = `${candidate.name.toLowerCase()}|${candidate.lat ?? ''}|${candidate.lng ?? ''}|${candidate.placeId ?? ''}`;
+        return candidateKey === key;
+      }) === index;
+    }),
+    destination,
+  );
 }
 
 export function activityToBlock(activity: ItineraryActivity, destination: string): DayBlock {
@@ -257,8 +261,13 @@ export function toDayPlan(itinerary: TripItinerary, dayNumber: number): DayPlan 
       ...itinerary.dayPlan,
       blocks: itinerary.dayPlan.blocks.map((block) => ({
         ...block,
-        pins: block.pins.map((pin) => withResolvedMapsUrl(pin, itinerary.destination)),
-        alternatives: block.alternatives ?? [],
+        pins: uniquifyPins(block.pins ?? [], itinerary.destination),
+        alternatives: (block.alternatives ?? []).map((alt) => ({
+          ...alt,
+          pins: uniquifyPins(alt.pins ?? [], itinerary.destination),
+          links: alt.links ?? [],
+          alternatives: alt.alternatives ?? [],
+        })),
         links: block.links ?? [],
       })),
     };
@@ -282,6 +291,14 @@ export function toDayPlan(itinerary: TripItinerary, dayNumber: number): DayPlan 
     },
     blocks: activities.map((activity) => activityToBlock(activity, itinerary.destination)),
   };
+}
+
+export function playbookLabelKey(kind: DayBlockKind): string {
+  return `planTrip.itinerary.playbooks.${kind}`;
+}
+
+export function pinRoleLabelKey(role: DayPinRole): string {
+  return `planTrip.itinerary.pinRoles.${role}`;
 }
 
 export function playbookLabel(kind: DayBlockKind): string {

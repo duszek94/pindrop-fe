@@ -476,6 +476,10 @@ export interface TripItinerary {
 
   dayPlan?: DayPlan | null;
 
+  lat?: number | null;
+
+  lng?: number | null;
+
 }
 
 
